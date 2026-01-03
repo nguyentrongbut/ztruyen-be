@@ -52,6 +52,14 @@ API truyện tranh, Data truyện tranh miễn phí.`
     .setVersion('1.0.0')
 
     // ===== TAG DESCRIPTIONS =====
+    .addTag(
+      'image',
+      'Hình ảnh',
+    )
+    .addTag(
+      'upload',
+      'Upload ảnh',
+    )
 
     .build();
 

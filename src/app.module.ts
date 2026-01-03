@@ -11,6 +11,8 @@ import { AppService } from './app.service';
 
 // ** Soft Delete Plugin
 import { softDeletePlugin } from 'soft-delete-plugin-mongoose';
+import { ImagesModule } from './images/images.module';
+import { UploadTelegramModule } from './upload-telegram/upload-telegram.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { softDeletePlugin } from 'soft-delete-plugin-mongoose';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ImagesModule,
+    UploadTelegramModule,
   ],
   controllers: [AppController],
   providers: [AppService],
