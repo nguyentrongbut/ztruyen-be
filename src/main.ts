@@ -1,10 +1,13 @@
 // ** NestJs
-import { NestFactory } from '@nestjs/core';
-import { VersioningType } from '@nestjs/common';
+import { NestFactory, Reflector } from '@nestjs/core';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 // ** Module
 import { AppModule } from './app.module';
+
+// ** Interceptor
+import { TransformInterceptor } from './core/transform.interceptor';
 
 // ** Swagger
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -12,6 +15,13 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+  const reflector = app.get(Reflector);
+
+  // Global Interceptor
+  app.useGlobalInterceptors(new TransformInterceptor(reflector));
+
+  // Global validation
+  app.useGlobalPipes(new ValidationPipe());
 
   // config cors
   app.enableCors({
