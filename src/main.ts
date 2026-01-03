@@ -6,6 +6,9 @@ import { ConfigService } from '@nestjs/config';
 // ** Module
 import { AppModule } from './app.module';
 
+// ** Swagger
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
@@ -26,8 +29,31 @@ async function bootstrap() {
     defaultVersion: ['1'],
   });
 
+  const descSwagger = `
+  [ Base URL: localhost:4000/api/v1 ]
+
+[ztruyen.io.vn](https://ztruyen.io.vn) Website cung cấp truyện tranh miễn phí nhanh chất lượng cao.  
+Nguồn truyện tranh chất lượng cao cập nhật nhanh nhất.  
+API truyện tranh, Data truyện tranh miễn phí.`
+
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('ztruyen API')
+    .setDescription(descSwagger)
+    .setVersion('1.0.0')
+
+    // ===== TAG DESCRIPTIONS =====
+    .addTag('system', 'API hệ thống: health check, keep-alive, warm-up server, monitoring')
+
+    .build();
+
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('api/docs', app, document, {
+    customSiteTitle: 'ztruyen API Document',
+  });
+
   // Listen
   const port = configService.get<string>('PORT');
   await app.listen(port || 4000);
 }
+
 bootstrap();
