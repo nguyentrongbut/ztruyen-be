@@ -1,19 +1,5 @@
 // ** NestJs
-import { Controller, Get } from '@nestjs/common';
-
-// ** Swagger
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
-
-@ApiTags('system')
+import { Controller } from '@nestjs/common';
 
 @Controller()
-export class AppController {
-  @Get('re-call')
-  @ApiOperation({
-    summary: 'Keep server alive / warm-up',
-    description: 'Endpoint dùng để gọi định kỳ nhằm giữ server hoạt động, tránh sleep (render, railway, etc.)',
-  })
-  reCall() {
-    return 'Hello World!';
-  }
-}
+export class AppController {}

@@ -30,7 +30,7 @@ async function bootstrap() {
   });
 
   const descSwagger = `
-  [ Base URL: localhost:4000/api/v1 ]
+  [ Base URL: api.ztruyen.io.vn/api/v1 ]
 
 [ztruyen.io.vn](https://ztruyen.io.vn) Website cung cấp truyện tranh miễn phí nhanh chất lượng cao.  
 Nguồn truyện tranh chất lượng cao cập nhật nhanh nhất.  
@@ -42,7 +42,6 @@ API truyện tranh, Data truyện tranh miễn phí.`
     .setVersion('1.0.0')
 
     // ===== TAG DESCRIPTIONS =====
-    .addTag('system', 'API hệ thống: health check, keep-alive, warm-up server, monitoring')
 
     .build();
 
