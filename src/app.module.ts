@@ -11,8 +11,13 @@ import { AppService } from './app.service';
 
 // ** Soft Delete Plugin
 import { softDeletePlugin } from 'soft-delete-plugin-mongoose';
-import { ImagesModule } from './images/images.module';
+
+// ** Modules
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 import { UploadTelegramModule } from './upload-telegram/upload-telegram.module';
+import { ImagesModule } from './images/images.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -32,6 +37,9 @@ import { UploadTelegramModule } from './upload-telegram/upload-telegram.module';
     }),
     ImagesModule,
     UploadTelegramModule,
+    EmailModule,
+    AuthModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

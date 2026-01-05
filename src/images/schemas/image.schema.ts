@@ -11,8 +11,11 @@ export class Image {
   @Prop({ required: true, unique: true })
   slug: string;
 
-  @Prop({ required: true })
+  @Prop()
   fileId: string;
+
+  @Prop({ required: true })
+  url: string;
 
   @Prop()
   createdAt: Date;

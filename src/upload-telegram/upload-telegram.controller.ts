@@ -28,11 +28,11 @@ import {
   ApiConsumes,
   ApiBody,
   ApiOperation,
-  ApiOkResponse,
-  ApiBadRequestResponse
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 
 @ApiTags('upload')
+@ApiBearerAuth('access-token')
 @Controller('upload')
 export class UploadTelegramController {
   constructor(private readonly uploadTelegramService: UploadTelegramService) {}

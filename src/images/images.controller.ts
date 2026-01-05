@@ -1,8 +1,6 @@
 // ** NestJs
 import {
-  Body,
   Controller,
-  Delete,
   ForbiddenException,
   Get,
   Param,
@@ -17,7 +15,7 @@ import type { Request, Response } from 'express';
 import { ImagesService } from './images.service';
 
 // ** Decorator
-import { ResponseMessage } from '../decorator/customize';
+import { Public, ResponseMessage } from '../decorator/customize';
 
 // ** Message
 import { IMAGE_MESSAGES } from '../configs/messages/image.message';
@@ -33,6 +31,7 @@ import {
 export class ImagesController {
   constructor(private readonly imagesService: ImagesService) {}
 
+  @Public()
   @Get('/:type/:slug')
   @ResponseMessage(IMAGE_MESSAGES.FETCH_SUCCESS)
   @ApiOperation({

@@ -6,8 +6,12 @@ import { ConfigService } from '@nestjs/config';
 // ** Module
 import { AppModule } from './app.module';
 
-// ** Interceptor
+// ** Guard & Interceptor
+import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { TransformInterceptor } from './core/transform.interceptor';
+
+// ** Cookies Parser
+import cookieParser from 'cookie-parser';
 
 // ** Swagger
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -17,11 +21,21 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const reflector = app.get(Reflector);
 
-  // Global Interceptor
+  // Global guard & Interceptor
+  app.useGlobalGuards(new JwtAuthGuard(reflector));
   app.useGlobalInterceptors(new TransformInterceptor(reflector));
 
   // Global validation
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
+
+  // config cookies
+  app.use(cookieParser());
 
   // config cors
   app.enableCors({
@@ -50,8 +64,27 @@ API truyện tranh, Data truyện tranh miễn phí.`
     .setTitle('ztruyen API')
     .setDescription(descSwagger)
     .setVersion('1.0.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'Authorization',
+        description: 'Nhập access token',
+        in: 'header',
+      },
+      'access-token',
+    )
 
     // ===== TAG DESCRIPTIONS =====
+    .addTag(
+      'authentication',
+      'Xác thực người dùng',
+    )
+    .addTag(
+      'user',
+      'Người dùng',
+    )
     .addTag(
       'image',
       'Hình ảnh',
@@ -60,6 +93,7 @@ API truyện tranh, Data truyện tranh miễn phí.`
       'upload',
       'Upload ảnh',
     )
+
 
     .build();
 

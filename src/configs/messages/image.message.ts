@@ -14,6 +14,8 @@ export const IMAGE_MESSAGES = {
   NO_SLUGS_PROVIDED: 'Không có slug nào được cung cấp',
   NO_IMAGES_FOUND_FOR_SLUGS:
     'Không tìm thấy hình ảnh nào tương ứng với các slug đã cho',
+  NO_IMAGES_FOUND_FOR_IDS:
+    'Không tìm thấy hình ảnh nào tương ứng với các ID đã cho',
 
   // --- UPLOAD  ---
   FETCH_SUCCESS: 'Tải hình ảnh thành công',
