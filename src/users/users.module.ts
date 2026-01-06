@@ -11,8 +11,12 @@ import { UsersController } from './users.controller';
 // ** Schemas
 import { User, UserSchema } from './schemas/user.schema';
 
+// ** Modules
+import { ImagesModule } from '../images/images.module';
+
 @Module({
   imports: [
+    ImagesModule,
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
   controllers: [UsersController],

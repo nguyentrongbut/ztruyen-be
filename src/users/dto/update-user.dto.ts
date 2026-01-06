@@ -10,21 +10,16 @@ import {
 } from 'class-validator';
 
 // ** Swagger
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 // ** Enums
-import { ProviderType, RoleType } from '../../configs/enums/user.enum';
+import { RoleType } from '../../configs/enums/user.enum';
 
 export class UpdateUserDto {
   @ApiPropertyOptional({ example: 'thỏ con xinh xắn' })
   @IsOptional()
   @IsString()
   name?: string;
-
-  @ApiProperty({ example: '123456' })
-  @IsString()
-  @IsNotEmpty()
-  password: string;
 
   // ===== Images (ObjectId) =====
   @ApiPropertyOptional({ example: '695b4a8139ebc0e4db1061fa' })

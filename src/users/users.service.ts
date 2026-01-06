@@ -1,7 +1,14 @@
 // ** NestJs
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
+
+// ** Mongoose
+import { Types } from 'mongoose';
 
 // ** Api Query Params
 import aqp from 'api-query-params';
@@ -44,6 +51,9 @@ import ExcelJS from 'exceljs';
 // ** Enums
 import { ProviderType, RoleType } from '../configs/enums/user.enum';
 
+// ** Services
+import { ImagesService } from '../images/images.service';
+
 // ** Dayjs
 import dayjs from 'dayjs';
 
@@ -54,6 +64,7 @@ export class UsersService {
   constructor(
     @InjectModel(User.name) private userModel: SoftDeleteModel<UserDocument>,
     private readonly configService: ConfigService,
+    private readonly imageService: ImagesService,
   ) {
     this.emailExpire = this.configService.get<string>(
       'EMAIL_RESET_PASSWORD_EXPIRE',
@@ -99,7 +110,7 @@ export class UsersService {
     const token = randomBytes(32).toString('hex');
     const expiry = new Date(
       Date.now() +
-      ms(this.configService.get<string>('EMAIL_RESET_PASSWORD_EXPIRE')),
+        ms(this.configService.get<string>('EMAIL_RESET_PASSWORD_EXPIRE')),
     );
     user.resetToken = token;
     user.resetTokenExpiry = expiry;
@@ -144,7 +155,86 @@ export class UsersService {
 
   async updateProfile(updateProfileDto: UpdateProfileDto, user: IUser) {
     await this.ensureNotDeleted(user._id);
-    return this.userModel.updateOne({ _id: user._id }, { $set: updateProfileDto });
+
+    const currentUser = await this.userModel
+      .findById(user._id)
+      .select('avatar cover')
+      .lean();
+
+    if (!currentUser) {
+      throw new NotFoundException(USERS_MESSAGES.INVALID_ID);
+    }
+
+    const updateData: Partial<IUser> = {};
+
+    if (
+      updateProfileDto.avatar &&
+      updateProfileDto.avatar !== currentUser.avatar?.toString()
+    ) {
+      updateData.avatar = new Types.ObjectId(updateProfileDto.avatar);
+    }
+
+    if (
+      updateProfileDto.cover &&
+      updateProfileDto.cover !== currentUser.cover?.toString()
+    ) {
+      updateData.cover = new Types.ObjectId(updateProfileDto.cover);
+    }
+
+    const {
+      name,
+      age,
+      gender,
+      bio,
+      birthday,
+      avatar_frame
+    } = updateProfileDto;
+
+    if (name !== undefined) {
+      updateData.name = name;
+    }
+
+    if (avatar_frame !== undefined) {
+      updateData.avatar_frame = new Types.ObjectId(avatar_frame);
+    }
+
+    if (age !== undefined) {
+      updateData.age = age;
+    }
+
+    if (gender !== undefined) {
+      updateData.gender = gender;
+    }
+
+    if (bio !== undefined) {
+      updateData.bio = bio;
+    }
+
+    if (birthday !== undefined) {
+      updateData.birthday = new Date(birthday);
+    }
+
+    const result = await this.userModel.updateOne(
+      { _id: user._id },
+      { $set: updateData }
+    );
+
+    // remove old images
+    if (
+      updateData.avatar &&
+      currentUser.avatar
+    ) {
+      await this.imageService.remove(currentUser.avatar.toString());
+    }
+
+    if (
+      updateData.cover &&
+      currentUser.cover
+    ) {
+      await this.imageService.remove(currentUser.cover.toString());
+    }
+
+    return result;
   }
 
   isValidPassword(password: string, hash: string) {
@@ -236,7 +326,85 @@ export class UsersService {
 
   async update(id: string, updateUserDto: UpdateUserDto) {
     await this.ensureNotDeleted(id);
-    return this.userModel.updateOne({ _id: id }, { $set: updateUserDto });
+
+    const currentUser = await this.userModel
+      .findById(id)
+      .select('avatar cover')
+      .lean();
+
+    if (!currentUser) {
+      throw new NotFoundException(USERS_MESSAGES.INVALID_ID);
+    }
+
+    const updateData: Partial<IUser> = {};
+
+    if (
+      updateUserDto.avatar &&
+      updateUserDto.avatar !== currentUser.avatar?.toString()
+    ) {
+      updateData.avatar = new Types.ObjectId(updateUserDto.avatar);
+    }
+
+    if (
+      updateUserDto.cover &&
+      updateUserDto.cover !== currentUser.cover?.toString()
+    ) {
+      updateData.cover = new Types.ObjectId(updateUserDto.cover);
+    }
+
+    const {
+      name,
+      age,
+      role,
+      gender,
+      bio,
+      birthday,
+      avatar_frame
+    } = updateUserDto;
+
+    if (name !== undefined) {
+      updateData.name = name;
+    }
+
+    if (avatar_frame !== undefined) {
+      updateData.avatar_frame = new Types.ObjectId(avatar_frame);
+    }
+
+    if (age !== undefined) {
+      updateData.age = age;
+    }
+
+    if (role !== undefined) {
+      updateData.role = role;
+    }
+
+    if (gender !== undefined) {
+      updateData.gender = gender;
+    }
+
+    if (bio !== undefined) {
+      updateData.bio = bio;
+    }
+
+    if (birthday !== undefined) {
+      updateData.birthday = new Date(birthday);
+    }
+
+    const result = await this.userModel.updateOne(
+      { _id: id },
+      { $set: updateData }
+    );
+
+    // remove old images AFTER update
+    if (updateData.avatar && currentUser.avatar) {
+      await this.imageService.remove(currentUser.avatar.toString());
+    }
+
+    if (updateData.cover && currentUser.cover) {
+      await this.imageService.remove(currentUser.cover.toString());
+    }
+
+    return result;
   }
 
   async remove(id: string) {
