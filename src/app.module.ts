@@ -18,6 +18,7 @@ import { UsersModule } from './users/users.module';
 import { UploadTelegramModule } from './upload-telegram/upload-telegram.module';
 import { ImagesModule } from './images/images.module';
 import { EmailModule } from './email/email.module';
+import { FramesModule } from './frames/frames.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { EmailModule } from './email/email.module';
     EmailModule,
     AuthModule,
     UsersModule,
+    FramesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,8 +1,9 @@
 // ** Class validator
-import { IsEmail, IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
+import { IsDate, IsEmail, IsInt, IsNotEmpty, IsOptional, IsString, Max, Min } from 'class-validator';
 
 // ** Swagger
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 
 export class RegisterUserDto {
   @ApiProperty({
@@ -27,14 +28,32 @@ export class RegisterUserDto {
   @IsString()
   password: string;
 
+
+  @ApiProperty({
+    example: '2003-11-28',
+    description: 'Ngày sinh (ISO string)',
+  })
+  @Type(() => Date)
+  @IsDate({ message: 'Ngày sinh không hợp lệ' })
+  birthday: Date;
+
   @ApiProperty({
     example: 18,
     minimum: 0,
   })
   @IsInt()
-  @Min(0)
+  @Min(10, { message: 'Tuổi phải từ 10 trở lên' })
+  @Max(100, { message: 'Tuổi không được lớn hơn 100' })
   age: number;
 
   @IsOptional()
   gender?: string;
+
+  @ApiProperty({
+    description: 'Cloudflare Turnstile token',
+    example: '0x4AAAAA...',
+  })
+  @IsNotEmpty()
+  @IsString()
+  cfToken: string;
 }

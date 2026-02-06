@@ -8,8 +8,7 @@ import { HydratedDocument, Types } from 'mongoose';
 import { Image } from '../../images/schemas/image.schema';
 
 // ** Enums
-import { ProviderType, RoleType } from '../../configs/enums/user.enum';
-
+import { GenderType, ProviderType, RoleType } from '../../configs/enums/user.enum';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -39,8 +38,12 @@ export class User {
   @Prop()
   age: number;
 
-  @Prop()
-  gender: string;
+  @Prop({
+    type: String,
+    enum: GenderType,
+    default: GenderType.MALE,
+  })
+  gender: GenderType;
 
   @Prop()
   birthday: Date;

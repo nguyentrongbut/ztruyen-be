@@ -7,6 +7,7 @@ import {
   Req,
   Res,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 // ** Express
 import type { Request, Response } from 'express';
@@ -21,15 +22,15 @@ import { Public, ResponseMessage } from '../decorator/customize';
 import { IMAGE_MESSAGES } from '../configs/messages/image.message';
 
 // ** Swagger
-import {
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('image')
 @Controller('image')
 export class ImagesController {
-  constructor(private readonly imagesService: ImagesService) {}
+  constructor(
+    private readonly imagesService: ImagesService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Public()
   @Get('/:type/:slug')
@@ -43,7 +44,14 @@ export class ImagesController {
     @Req() req: Request,
   ) {
     const referer = req.get('referer');
-    const allowedOrigins = ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:4000'];
+
+    const feClientUrl =  this.configService.get<string>('FE_CLIENT_URL')
+    const feAdminUrl =  this.configService.get<string>('FE_ADMIN_URL')
+    const beUrl = this.configService.get<string>('BACKEND_URL')
+
+    const allowedOrigins = [
+      feClientUrl, feAdminUrl, beUrl
+    ];
 
     // Check referer
     if (

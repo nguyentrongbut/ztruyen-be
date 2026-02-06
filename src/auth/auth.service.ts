@@ -136,7 +136,9 @@ export class AuthService {
   }
 
   async register(user: RegisterUserDto) {
-    const newUser = await this.usersService.register(user);
+    const { cfToken, ...userData } = user;
+    // @ts-ignore
+    const newUser = await this.usersService.register(userData);
     return {
       _id: newUser._id,
       createdAt: newUser?.createdAt,

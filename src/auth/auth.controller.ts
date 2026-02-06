@@ -17,6 +17,7 @@ import {
 
 // ** Services
 import { AuthService } from './auth.service';
+import { CloudflareService } from './cloudflare.service';
 
 // ** DTO
 import { RegisterUserDto } from './dto/register-user.dto';
@@ -60,8 +61,8 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
-  ) {
-  }
+    private readonly cloudflareService: CloudflareService,
+  ) {}
 
   @Public()
   @UseGuards(LocalAuthGuard)
@@ -72,10 +73,17 @@ export class AuthController {
   @ApiConsumes('application/json')
   @Post('login')
   async handleLogin(
-    @Body() _: LoginDto,
+    @Body() body: LoginDto,
     @Req() req,
     @Res({ passthrough: true }) response: Response,
   ) {
+    const ip =
+      req.headers['cf-connecting-ip'] ||
+      req.headers['x-forwarded-for'] ||
+      req.ip;
+
+    await this.cloudflareService.verifyTurnstile(body.cfToken, ip);
+
     const { accessToken, refresh_token, user } = await this.authService.login(
       req.user,
     );
@@ -99,8 +107,7 @@ export class AuthController {
       'Redirect người dùng sang trang đăng nhập Google OAuth. Sau khi đăng nhập thành công sẽ callback về backend.',
   })
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  async googleAuth() {
-  }
+  async googleAuth() {}
 
   @Public()
   @Get('facebook')
@@ -112,8 +119,7 @@ export class AuthController {
       'Redirect người dùng sang trang đăng nhập Facebook OAuth. Sau khi đăng nhập thành công sẽ callback về backend.',
   })
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  async login() {
-  }
+  async login() {}
 
   @Public()
   @Get('google/callback')
@@ -161,14 +167,20 @@ export class AuthController {
   @ApiOperation({
     summary: 'Đăng ký người dùng',
   })
-  handleRegister(@Body() registerUserDto: RegisterUserDto) {
+  async handleRegister(@Body() registerUserDto: RegisterUserDto, @Req() req) {
+    const ip =
+      req.headers['cf-connecting-ip'] ||
+      req.headers['x-forwarded-for'] ||
+      req.ip;
+
+    await this.cloudflareService.verifyTurnstile(registerUserDto.cfToken, ip);
+
     return this.authService.register(registerUserDto);
   }
 
   @Public()
   @Get('/refresh')
   @ResponseMessage(AUTH_MESSAGES.REFRESH_TOKEN_SUCCESS)
-  @ApiBearerAuth('access-token')
   @ApiOperation({
     summary: 'Làm mới access token bằng refresh token',
   })
@@ -212,7 +224,14 @@ export class AuthController {
   @ApiOperation({
     summary: 'Quên mật khẩu',
   })
-  forgotPassword(@Body() dto: ForgotPasswordDto) {
+  async forgotPassword(@Body() dto: ForgotPasswordDto, @Req() req) {
+    const ip =
+      req.headers['cf-connecting-ip'] ||
+      req.headers['x-forwarded-for'] ||
+      req.ip;
+
+    await this.cloudflareService.verifyTurnstile(dto.cfToken, ip);
+
     return this.authService.forgotPassword(dto.email);
   }
 

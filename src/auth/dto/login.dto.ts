@@ -18,4 +18,12 @@ export class LoginDto {
   @IsString()
   @IsNotEmpty()
   password: string;
+
+  @ApiProperty({
+    description: 'Cloudflare Turnstile token',
+    example: '0x4AAAAA...',
+  })
+  @IsNotEmpty()
+  @IsString()
+  cfToken: string;
 }

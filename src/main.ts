@@ -21,6 +21,10 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const reflector = app.get(Reflector);
 
+  // url
+  const feClientUrl = configService.get<string>('FE_CLIENT_URL');
+  const feAdminUrl = configService.get<string>('FE_ADMIN_URL');
+
   // Global guard & Interceptor
   app.useGlobalGuards(new JwtAuthGuard(reflector));
   app.useGlobalInterceptors(new TransformInterceptor(reflector));
@@ -39,7 +43,7 @@ async function bootstrap() {
 
   // config cors
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:5173'],
+    origin: [feClientUrl, feAdminUrl],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     preflightContinue: false,
     optionsSuccessStatus: 204,

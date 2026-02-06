@@ -9,3 +9,9 @@ export enum RoleType {
   AUTHOR = 'author',
   USER = 'user',
 }
+
+export enum GenderType {
+  MALE = 'male',
+  FEMALE = 'female',
+  LGBT = 'lgbt',
+}

@@ -11,6 +11,7 @@ import { ImagesModule } from '../images/images.module';
 // ** Services
 import { AuthService } from './auth.service';
 import { EmailService } from '../email/email.service';
+import { CloudflareService } from './cloudflare.service';
 
 // ** Controllers
 import { AuthController } from './auth.controller';
@@ -35,7 +36,8 @@ import ms from 'ms';
         secret: configService.get<string>('JWT_ACCESS_TOKEN'),
         signOptions: {
           expiresIn:
-            ms(configService.get<string>('JWT_ACCESS_TOKEN_EXPIRE') as string) / 1000,
+            ms(configService.get<string>('JWT_ACCESS_TOKEN_EXPIRE') as string) /
+            1000,
         },
       }),
       inject: [ConfigService],
@@ -44,11 +46,12 @@ import ms from 'ms';
   controllers: [AuthController],
   providers: [
     AuthService,
+    CloudflareService,
     LocalStrategy,
     JwtStrategy,
     EmailService,
     GoogleStrategy,
     FacebookStrategy,
-  ]
+  ],
 })
 export class AuthModule {}
