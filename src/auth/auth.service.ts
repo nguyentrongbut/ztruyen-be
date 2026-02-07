@@ -150,10 +150,23 @@ export class AuthService {
   }
 
   async forgotPassword(email: string) {
-    const token = await this.usersService.setResetToken(email);
     const user = await this.usersService.findOneByEmail(email);
 
-    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+    if (!user) {
+      return;
+    }
+
+    if (user.provider !== 'local') {
+      return;
+    }
+
+    if (!user.password) {
+      return;
+    }
+
+    const token = await this.usersService.setResetToken(user.email);
+
+    const resetLink = `${process.env.FRONTEND_URL}/quen-mat-khau?token=${token}`;
     const expireTime = formatExpireTime(
       this.configService.get<string>('EMAIL_RESET_PASSWORD_EXPIRE'),
     );
