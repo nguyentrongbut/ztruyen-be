@@ -53,7 +53,7 @@ export class ImagesService {
 
     const finalUrl =
       url ??
-      `${this.configService.get<string>('BACKEND_URL')}/images/${slug}`;
+      `${this.configService.get<string>('BACKEND_URL')}/image/${slug}`;
 
     const newImage = await this.imageModel.create({
       fileId,
@@ -80,7 +80,7 @@ export class ImagesService {
       .map((f) => ({
         fileId: f.fileId,
         slug: f.slug,
-        url: `${backendUrl}/images/${f.slug}`,
+        url: `${backendUrl}/image/${f.slug}`,
       }));
 
     // insertMany

@@ -33,7 +33,7 @@ export class ImagesController {
   ) {}
 
   @Public()
-  @Get('/:type/:slug')
+  @Get('/:slug')
   @ResponseMessage(IMAGE_MESSAGES.FETCH_SUCCESS)
   @ApiOperation({
     summary: 'Lấy đường dẫn hình ảnh theo slug',
