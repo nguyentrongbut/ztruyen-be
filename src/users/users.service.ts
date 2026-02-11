@@ -150,6 +150,11 @@ export class UsersService {
     await this.ensureNotDeleted(user._id);
     return this.userModel
       .findById(user._id)
+      .populate([
+        { path: 'avatar', select: 'url' },
+        { path: 'cover', select: 'url' },
+        { path: 'avatar_frame', select: 'url' },
+      ])
       .select('-password -refreshToken -isDeleted -deletedAt');
   }
 
@@ -181,14 +186,7 @@ export class UsersService {
       updateData.cover = new Types.ObjectId(updateProfileDto.cover);
     }
 
-    const {
-      name,
-      age,
-      gender,
-      bio,
-      birthday,
-      avatar_frame
-    } = updateProfileDto;
+    const { name, age, gender, bio, birthday, avatar_frame } = updateProfileDto;
 
     if (name !== undefined) {
       updateData.name = name;
@@ -216,21 +214,15 @@ export class UsersService {
 
     const result = await this.userModel.updateOne(
       { _id: user._id },
-      { $set: updateData }
+      { $set: updateData },
     );
 
     // remove old images
-    if (
-      updateData.avatar &&
-      currentUser.avatar
-    ) {
+    if (updateData.avatar && currentUser.avatar) {
       await this.imageService.remove(currentUser.avatar.toString());
     }
 
-    if (
-      updateData.cover &&
-      currentUser.cover
-    ) {
+    if (updateData.cover && currentUser.cover) {
       await this.imageService.remove(currentUser.cover.toString());
     }
 
@@ -352,15 +344,8 @@ export class UsersService {
       updateData.cover = new Types.ObjectId(updateUserDto.cover);
     }
 
-    const {
-      name,
-      age,
-      role,
-      gender,
-      bio,
-      birthday,
-      avatar_frame
-    } = updateUserDto;
+    const { name, age, role, gender, bio, birthday, avatar_frame } =
+      updateUserDto;
 
     if (name !== undefined) {
       updateData.name = name;
@@ -392,7 +377,7 @@ export class UsersService {
 
     const result = await this.userModel.updateOne(
       { _id: id },
-      { $set: updateData }
+      { $set: updateData },
     );
 
     // remove old images AFTER update
