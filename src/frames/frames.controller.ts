@@ -8,6 +8,7 @@ import { Roles } from '../decorator/roles.decorator';
 import { RoleType } from '../configs/enums/user.enum';
 import { ResponseMessage } from '../decorator/customize';
 import { FRAMES_MESSAGES } from '../configs/messages/frame.message';
+import { RestoreAndDeleteMultiDto } from '../users/dto/restore-and-delete-multi.dto';
 
 @ApiTags('frame')
 @ApiBearerAuth('access-token')
@@ -35,11 +36,11 @@ export class FramesController {
 Hỗ trợ filter động trực tiếp qua query string(name, createdAt, updatedAt).
 
 Ví dụ:
-- /users?name=khungthocon
-- /users?sort=-name
-- /users?name=/khungthocon/i
-- /users?createdAt=20&createdAt<=25
-- /users?name=khungthocon&sort=name
+- /frame?name=khungthocon
+- /frame?sort=-name
+- /frame?name=/khungthocon/i
+- /frame?createdAt=2026-01-25T11:30:41.401Z&createdAt<=2026-02-15T14:50:27.251Z
+- /frame?name=khungthocon&sort=name
 `,
   })
   @ApiQuery({ name: 'page', required: false, example: 1 })
@@ -63,13 +64,31 @@ Sắp xếp kết quả:
 
   @Patch(':id')
   @Roles(RoleType.ADMIN)
+  @ResponseMessage(FRAMES_MESSAGES.UPDATE_SUCCESS)
+  @ApiOperation({
+    summary: 'Cập nhật thông tin khung avatar (Chỉ Admin có quyền)',
+  })
   update(@Param('id') id: string, @Body() updateFrameDto: UpdateFrameDto) {
-    return this.framesService.update(+id, updateFrameDto);
+    return this.framesService.update(id, updateFrameDto);
   }
 
-  @Delete(':id')
+  @Delete('delete/:id')
   @Roles(RoleType.ADMIN)
+  @ResponseMessage(FRAMES_MESSAGES.DELETE_SUCCESS)
+  @ApiOperation({
+    summary: 'Xoá khung avatar (Chỉ Admin có quyền)',
+  })
   remove(@Param('id') id: string) {
-    return this.framesService.remove(+id);
+    return this.framesService.remove(id);
+  }
+
+  @Delete('delete-multi')
+  @Roles(RoleType.ADMIN)
+  @ResponseMessage(FRAMES_MESSAGES.DELETE_MULTI_SUCCESS)
+  @ApiOperation({
+    summary: 'Xoá nhiều khung avatar (Chỉ Admin có quyền)',
+  })
+  removeMulti(@Body() dto: RestoreAndDeleteMultiDto) {
+    return this.framesService.removeMulti(dto.ids);
   }
 }

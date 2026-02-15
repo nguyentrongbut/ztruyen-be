@@ -10,9 +10,11 @@ import { FramesController } from './frames.controller';
 
 // ** Schemas
 import { Frame, FrameSchema } from './schemas/frame.schemas';
+import { ImagesModule } from '../images/images.module';
 
 @Module({
   imports: [
+    ImagesModule,
     MongooseModule.forFeature([{ name: Frame.name, schema: FrameSchema }]),
   ],
   controllers: [FramesController],

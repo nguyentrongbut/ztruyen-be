@@ -4,7 +4,6 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  Min,
 } from 'class-validator';
 
 // ** Swagger
@@ -19,5 +18,5 @@ export class CreateFrameDto {
   @ApiPropertyOptional({ example: '705b4a8139ebc0e4dd1061fb' })
   @IsOptional()
   @IsMongoId()
-  image?: string;
+  image: string;
 }
