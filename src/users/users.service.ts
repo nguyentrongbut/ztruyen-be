@@ -291,8 +291,12 @@ export class UsersService {
       .skip(offset)
       .limit(defaultLimit)
       .sort(sort as any)
-      .populate(population)
-      .select('-password -refreshToken -isDeleted')
+      .populate([
+        { path: 'avatar', select: 'url' },
+        { path: 'cover', select: 'url' },
+        { path: 'avatar_frame', select: 'url' },
+      ])
+      .select('-password -refreshToken -deletedAt')
       .exec();
 
     return {

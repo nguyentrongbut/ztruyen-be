@@ -166,7 +166,7 @@ export class AuthService {
 
     const token = await this.usersService.setResetToken(user.email);
 
-    const resetLink = `${process.env.FRONTEND_URL}/quen-mat-khau?token=${token}`;
+    const resetLink = `${process.env.FE_CLIENT_URL}/quen-mat-khau?token=${token}`;
     const expireTime = formatExpireTime(
       this.configService.get<string>('EMAIL_RESET_PASSWORD_EXPIRE'),
     );
