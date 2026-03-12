@@ -20,6 +20,10 @@ import { RegisterUserDto } from '../auth/dto/register-user.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ImportUserDto } from './dto/import-user.dto';
+import {
+  AdminChangePasswordDto,
+  ChangePasswordDto,
+} from './dto/change-password.dto';
 
 // ** Schemas
 import { User, UserDocument } from './schemas/user.schema';
@@ -229,6 +233,56 @@ export class UsersService {
     return result;
   }
 
+  async deleteProfile(user: IUser) {
+    await this.ensureNotDeleted(user._id);
+    return this.userModel.deleteOne({ _id: user._id });
+  }
+
+  async changePassword(changePasswordDto: ChangePasswordDto, user: IUser) {
+    await this.ensureNotDeleted(user._id);
+
+    const { oldPassword, newPassword } = changePasswordDto;
+
+    const foundUser = await this.userModel.findById(user._id);
+
+    if (!foundUser) {
+      throw new NotFoundException(USERS_MESSAGES.USER_NOT_FOUND);
+    }
+
+    const isMatch = this.isValidPassword(oldPassword, foundUser.password);
+
+    if (!isMatch) {
+      throw new BadRequestException(USERS_MESSAGES.INVALID_OLD_PASSWORD);
+    }
+
+    const hashPassword = this.getHashPassword(newPassword);
+
+    foundUser.password = hashPassword;
+
+    await foundUser.save();
+  }
+
+  async changePasswordByAdmin(
+    id: string,
+    AdminChangePasswordDto: AdminChangePasswordDto,
+  ) {
+    await this.ensureNotDeleted(id);
+
+    const { newPassword } = AdminChangePasswordDto;
+
+    const user = await this.userModel.findById(id);
+
+    if (!user) {
+      throw new NotFoundException(USERS_MESSAGES.USER_NOT_FOUND);
+    }
+
+    user.password = this.getHashPassword(newPassword);
+
+    user.refreshToken = null;
+
+    await user.save();
+  }
+
   isValidPassword(password: string, hash: string) {
     return compareSync(password, hash);
   }
@@ -272,7 +326,7 @@ export class UsersService {
     qs: string,
     currentUserId: string,
   ) {
-    const { filter, sort, population } = aqp(qs);
+    const { filter, sort } = aqp(qs);
     delete filter.page;
     delete filter.limit;
 
@@ -317,6 +371,11 @@ export class UsersService {
       .findOne({
         _id: id,
       })
+      .populate([
+        { path: 'avatar', select: 'url' },
+        { path: 'cover', select: 'url' },
+        { path: 'avatar_frame', select: 'url' },
+      ])
       .select('-password -refreshToken -isDeleted');
   }
 
@@ -510,26 +569,30 @@ export class UsersService {
       .limit(+limit)
       .sort(sort as any)
       .select('-password -refreshToken')
-      .populate(population)
+      .populate([
+        { path: 'avatar', select: 'url' },
+        { path: 'cover', select: 'url' },
+        { path: 'avatar_frame', select: 'url' },
+      ])
       .lean();
 
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet(`Users Page ${page}`);
 
     sheet.columns = [
-      { header: 'Name', key: 'name', width: 25 },
+      { header: 'Tên', key: 'name', width: 25 },
       { header: 'Email', key: 'email', width: 30 },
-      { header: 'Age', key: 'age', width: 10 },
-      { header: 'Birthday', key: 'birthday', width: 30 },
-      { header: 'Avatar', key: 'avatar', width: 30 },
-      { header: 'Avatar Frame', key: 'avatar_frame', width: 30 },
-      { header: 'Cover', key: 'cover', width: 30 },
-      { header: 'Gender', key: 'gender', width: 10 },
-      { header: 'Role', key: 'role', width: 15 },
-      { header: 'Bio', key: 'bio', width: 25 },
-      { header: 'Provider', key: 'provider', width: 25 },
-      { header: 'Created At', key: 'createdAt', width: 30 },
-      { header: 'Updated At', key: 'updatedAt', width: 30 },
+      { header: 'Tuổi', key: 'age', width: 10 },
+      { header: 'Ngày sinh', key: 'birthday', width: 30 },
+      { header: 'Ảnh đại diện', key: 'avatar', width: 30 },
+      { header: 'Khung ảnh đại diện', key: 'avatar_frame', width: 30 },
+      { header: 'Ảnh bìa', key: 'cover', width: 30 },
+      { header: 'Giới tính', key: 'gender', width: 12 },
+      { header: 'Vai trò', key: 'role', width: 15 },
+      { header: 'Giới thiệu', key: 'bio', width: 30 },
+      { header: 'Loại tài khoản', key: 'provider', width: 25 },
+      { header: 'Ngày tạo', key: 'createdAt', width: 30 },
+      { header: 'Ngày cập nhật', key: 'updatedAt', width: 30 },
     ];
 
     users.forEach((user) => {
@@ -540,9 +603,9 @@ export class UsersService {
         birthday: user.birthday
           ? dayjs(user.birthday).format('DD/MM/YYYY')
           : '',
-        avatar: user.avatar || '',
-        avatar_frame: user.avatar_frame || '',
-        cover: user.cover || '',
+        avatar: (user.avatar as any)?.url || '',
+        avatar_frame: (user.avatar_frame as any)?.url || '',
+        cover: (user.cover as any)?.url || '',
         gender: user.gender,
         role: user.role,
         bio: user.bio,
@@ -582,9 +645,6 @@ export class UsersService {
           email,
           age,
           birthday,
-          avatar,
-          avatar_frame,
-          cover,
           gender,
           role,
           bio,
@@ -599,9 +659,6 @@ export class UsersService {
           email: email as string,
           age: Number(age) || 0,
           birthday: birthday ? dayjs(birthday, 'DD/MM/YYYY').toDate() : null,
-          avatar: avatar as string,
-          avatar_frame: avatar_frame as string,
-          cover: cover as string,
           gender: gender as string,
           role: role as RoleType,
           bio: bio as string,
@@ -635,9 +692,6 @@ export class UsersService {
       { header: 'Email', key: 'email', width: 30 },
       { header: 'Age', key: 'age', width: 10 },
       { header: 'Birthday', key: 'birthday', width: 15 },
-      { header: 'Avatar', key: 'avatar', width: 30 },
-      { header: 'Avatar Frame', key: 'avatar_frame', width: 30 },
-      { header: 'Cover', key: 'cover', width: 30 },
       { header: 'Gender', key: 'gender', width: 10 },
       { header: 'Role', key: 'role', width: 15 },
       { header: 'Bio', key: 'bio', width: 25 },
@@ -649,9 +703,6 @@ export class UsersService {
       'john@example.com',
       25,
       dayjs('2000-01-01').format('DD/MM/YYYY'),
-      'https://example.com/avatar.webp',
-      'https://example.com/avatarframe.webp',
-      'https://example.com/cover.webp',
       'male',
       'user',
       'New member',

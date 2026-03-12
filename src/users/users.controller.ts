@@ -25,6 +25,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { RestoreAndDeleteMultiDto } from './dto/restore-and-delete-multi.dto';
+import { AdminChangePasswordDto, ChangePasswordDto } from './dto/change-password.dto';
 
 // ** Decorator
 import { ResponseMessage, User } from '../decorator/customize';
@@ -129,6 +130,45 @@ Sắp xếp kết quả:
     return this.usersService.updateProfile(updateProfileDto, user);
   }
 
+  @Delete('profile')
+  @ResponseMessage(USERS_MESSAGES.DELETE_PROFILE_SUCCESS)
+  @ApiOperation({
+    summary: 'Xoá tài khoản cá nhân',
+  })
+  async deleteProfile(
+    @Res({ passthrough: true }) response: Response,
+    @User() user: IUser,
+  ) {
+    await this.usersService.deleteProfile(user);
+    response.clearCookie('ZTC_token');
+    return 'ok';
+  }
+
+  @Patch('change-password')
+  @ResponseMessage(USERS_MESSAGES.CHANGE_PASSWORD_SUCCESS)
+  @ApiOperation({
+    summary: 'Đổi mật khẩu',
+  })
+  changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @User() user: IUser,
+  ) {
+    return this.usersService.changePassword(changePasswordDto, user);
+  }
+
+  @Patch('change-password/:id')
+  @Roles(RoleType.ADMIN)
+  @ResponseMessage(USERS_MESSAGES.ADMIN_CHANGE_PASSWORD_SUCCESS)
+  @ApiOperation({
+    summary: 'Đổi mật khẩu người dùng',
+  })
+  changePasswordByAdmin(
+    @Param('id') id: string,
+    @Body() adminChangePasswordDto: AdminChangePasswordDto,
+  ) {
+    return this.usersService.changePasswordByAdmin(id, adminChangePasswordDto);
+  }
+
   @Patch('update/:id')
   @Roles(RoleType.ADMIN)
   @ResponseMessage(USERS_MESSAGES.UPDATE_SUCCESS)
@@ -141,7 +181,7 @@ Sắp xếp kết quả:
 
   @Delete('delete/:id')
   @Roles(RoleType.ADMIN)
-  @ResponseMessage(USERS_MESSAGES.DELETE_SUCCESS)
+  @ResponseMessage(USERS_MESSAGES.BAN_USER_SUCCESS)
   @ApiOperation({
     summary: 'Xoá mềm người dùng (Chỉ Admin có quyền)',
   })
@@ -151,7 +191,7 @@ Sắp xếp kết quả:
 
   @Delete('delete-multi')
   @Roles(RoleType.ADMIN)
-  @ResponseMessage(USERS_MESSAGES.DELETE_MULTI_SUCCESS)
+  @ResponseMessage(USERS_MESSAGES.BAN_MULTI_USER_SUCCESS)
   @ApiOperation({
     summary: 'Xoá mềm nhiều người dùng (Chỉ Admin có quyền)',
   })

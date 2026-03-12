@@ -12,10 +12,15 @@ export const USERS_MESSAGES = {
   CREATE_SUCCESS: 'Tạo người dùng thành công!',
   UPDATE_SUCCESS: 'Cập nhật người dùng thành công!',
   UPDATE_PROFILE_SUCCESS: 'Cập nhật hồ sơ thành công!',
+  BAN_USER_SUCCESS: 'Cấm người dùng thành công!',
+  BAN_MULTI_USER_SUCCESS: 'Cấm nhiều người dùng thành công!',
   DELETE_SUCCESS: 'Xóa người dùng thành công!',
   DELETE_MULTI_SUCCESS: 'Xóa nhiều người dùng thành công!',
   RESTORE_SUCCESS: 'Khôi phục người dùng thành công!',
   RESTORE_MULTI_SUCCESS: 'Khôi phục nhiều người dùng thành công!',
+  CHANGE_PASSWORD_SUCCESS: 'Đổi mật khẩu thành công!',
+  ADMIN_CHANGE_PASSWORD_SUCCESS: 'Đổi mật khẩu người dùng thành công!',
+  DELETE_PROFILE_SUCCESS: 'Xoá tài khoản thành công!',
 
   // --- GET ---
   GET_ALL_SUCCESS: 'Lấy danh sách người dùng thành công!',
@@ -26,5 +31,6 @@ export const USERS_MESSAGES = {
 
   // --- AUTH / PASSWORD ---
   INVALID_OR_EXPIRED_TOKEN: 'Mã đặt lại mật khẩu không hợp lệ hoặc đã hết hạn!',
-  USER_NOT_FOUND: 'Không tìm thấy người dùng tương ứng với email!',
+  USER_NOT_FOUND: 'Không tìm thấy người dùng',
+  INVALID_OLD_PASSWORD: 'Mật khẩu cũ không chính xác',
 } as const;
