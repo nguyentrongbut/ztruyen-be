@@ -25,7 +25,6 @@ import { validateMongoId, validateMongoIds } from '../utils/mongoose.util';
 import { IFrame } from './frames.interface';
 import { Types } from 'mongoose';
 import { ImagesService } from '../images/images.service';
-import { USERS_MESSAGES } from '../configs/messages/user.message';
 
 @Injectable()
 export class FramesService {
@@ -43,7 +42,7 @@ export class FramesService {
       throw new BadRequestException(FRAMES_MESSAGES.NAME_EXISTED);
     }
 
-    const newFrame = await this.frameModel.create({ createFrameDto });
+    const newFrame = await this.frameModel.create(createFrameDto);
 
     return {
       _id: newFrame?._id,
@@ -52,7 +51,7 @@ export class FramesService {
   }
 
   async findAll(page: number, limit: number, qs: string) {
-    const { filter, sort, population } = aqp(qs);
+    const { filter, sort } = aqp(qs);
     delete filter.page;
     delete filter.limit;
 
@@ -69,8 +68,10 @@ export class FramesService {
       .skip(offset)
       .limit(defaultLimit)
       .sort(sort as any)
-      .populate(population)
-      .select('-isDeleted')
+      .populate([
+        { path: 'image', select: 'url' }
+      ])
+      .select('-isDeleted -deletedAt')
       .exec();
 
     return {
@@ -82,6 +83,17 @@ export class FramesService {
       },
       result,
     };
+  }
+
+  async findOne(id: string) {
+    return this.frameModel
+      .findOne({
+        _id: id,
+      })
+      .populate([
+        { path: 'image', select: 'url' }
+      ])
+      .select('-isDeleted -deletedAt');
   }
 
   async update(id: string, updateFrameDto: UpdateFrameDto) {
@@ -122,18 +134,53 @@ export class FramesService {
     return result;
   }
 
-  remove(id: string) {
+  async remove(id: string) {
     validateMongoId(id);
-    return this.frameModel.deleteOne({ _id: id });
+
+    const frame = await this.frameModel
+      .findById(id)
+      .select('image')
+      .lean();
+
+    if (!frame) {
+      throw new NotFoundException(FRAMES_MESSAGES.INVALID_ID);
+    }
+
+    await this.frameModel.deleteOne({ _id: id });
+
+    if (frame.image) {
+      await this.imageService.remove(frame.image.toString());
+    }
+
+    return { deleted: true };
   }
 
   async removeMulti(ids: string[]) {
     validateMongoIds(ids);
-    const users = await this.frameModel.find({
-      _id: { $in: ids }
-    });
-    if (!users.length)
+
+    const frames = await this.frameModel
+      .find({ _id: { $in: ids } })
+      .select('image')
+      .lean();
+
+    if (!frames.length) {
       throw new BadRequestException(FRAMES_MESSAGES.NO_ELIGIBLE);
-    return this.frameModel.deleteMany({ _id: { $in: users.map((u) => u._id) } });
+    }
+
+    await this.frameModel.deleteMany({
+      _id: { $in: frames.map((f) => f._id) },
+    });
+
+    const imageIds = frames
+      .filter((f) => f.image)
+      .map((f) => f.image.toString());
+
+    if (imageIds.length) {
+      await this.imageService.removeMany(imageIds);
+    }
+
+    return {
+      deletedCount: frames.length,
+    };
   }
 }

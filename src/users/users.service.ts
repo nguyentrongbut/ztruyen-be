@@ -475,7 +475,7 @@ export class UsersService {
 
   // Trash
   async findDeleted(page: number, limit: number, qs: string) {
-    const { filter, sort, population } = aqp(qs);
+    const { filter, sort } = aqp(qs);
     delete filter.page;
     delete filter.limit;
 
@@ -492,7 +492,11 @@ export class UsersService {
       .skip(offset)
       .limit(defaultLimit)
       .sort(sort as any)
-      .populate(population)
+      .populate([
+        { path: 'avatar', select: 'url' },
+        { path: 'cover', select: 'url' },
+        { path: 'avatar_frame', select: 'url' },
+      ])
       .select('-password -refreshToken -isDeleted')
       .exec();
 
@@ -516,18 +520,60 @@ export class UsersService {
 
   async hardRemove(id: string) {
     validateMongoId(id);
-    return this.userModel.deleteOne({ _id: id });
+
+    const user = await this.userModel
+      .findById(id)
+      .select('avatar cover')
+      .lean();
+
+    if (!user) {
+      throw new NotFoundException(USERS_MESSAGES.INVALID_ID);
+    }
+
+    await this.userModel.deleteOne({ _id: id });
+
+    const imageIds = [user.avatar, user.cover]
+      .filter(Boolean)
+      .map((img) => img.toString());
+
+    if (imageIds.length) {
+      await this.imageService.removeMany(imageIds);
+    }
+
+    return { deleted: true };
   }
 
   async hardRemoveMulti(ids: string[]) {
     validateMongoIds(ids);
-    const users = await this.userModel.find({
-      _id: { $in: ids },
-      isDeleted: true,
-    });
-    if (!users.length)
+
+    const users = await this.userModel
+      .find({
+        _id: { $in: ids },
+        isDeleted: true,
+      })
+      .select('avatar cover')
+      .lean();
+
+    if (!users.length) {
       throw new BadRequestException(USERS_MESSAGES.NO_ELIGIBLE);
-    return this.userModel.deleteMany({ _id: { $in: users.map((u) => u._id) } });
+    }
+
+    await this.userModel.deleteMany({
+      _id: { $in: users.map((u) => u._id) },
+    });
+
+    const imageIds = users
+      .flatMap((u) => [u.avatar, u.cover])
+      .filter(Boolean)
+      .map((img) => img.toString());
+
+    if (imageIds.length) {
+      await this.imageService.removeMany(imageIds);
+    }
+
+    return {
+      deletedCount: users.length,
+    };
   }
 
   async restore(id: string) {

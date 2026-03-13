@@ -1,14 +1,27 @@
+// ** Nest Js
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
+
+// ** Services
 import { FramesService } from './frames.service';
+
+// ** Dtos
 import { CreateFrameDto } from './dto/create-frame.dto';
 import { UpdateFrameDto } from './dto/update-frame.dto';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { RolesGuard } from '../guards/roles.guard';
-import { Roles } from '../decorator/roles.decorator';
-import { RoleType } from '../configs/enums/user.enum';
-import { ResponseMessage } from '../decorator/customize';
-import { FRAMES_MESSAGES } from '../configs/messages/frame.message';
 import { RestoreAndDeleteMultiDto } from '../users/dto/restore-and-delete-multi.dto';
+
+// ** Swagger
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+
+// ** Guards
+import { RolesGuard } from '../guards/roles.guard';
+
+// ** Decorators
+import { Roles } from '../decorator/roles.decorator';
+import { ResponseMessage } from '../decorator/customize';
+
+// ** Config
+import { RoleType } from '../configs/enums/user.enum';
+import { FRAMES_MESSAGES } from '../configs/messages/frame.message';
 
 @ApiTags('frame')
 @ApiBearerAuth('access-token')
@@ -60,6 +73,16 @@ Sắp xếp kết quả:
     @Query() qs: string,
   ) {
     return this.framesService.findAll(+page, +limit, qs);
+  }
+
+  @Get('detail/:id')
+  @Roles(RoleType.ADMIN)
+  @ResponseMessage(FRAMES_MESSAGES.GET_DETAIL_SUCCESS)
+  @ApiOperation({
+    summary: 'Thông tin khung avatar (Chỉ Admin có quyền)',
+  })
+  findOne(@Param('id') id: string) {
+    return this.framesService.findOne(id);
   }
 
   @Patch(':id')
