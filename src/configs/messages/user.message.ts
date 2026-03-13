@@ -21,6 +21,7 @@ export const USERS_MESSAGES = {
   CHANGE_PASSWORD_SUCCESS: 'Đổi mật khẩu thành công!',
   ADMIN_CHANGE_PASSWORD_SUCCESS: 'Đổi mật khẩu người dùng thành công!',
   DELETE_PROFILE_SUCCESS: 'Xoá tài khoản thành công!',
+  UPDATE_FRAME_SUCCESS: 'Cập nhật khung avatar thành công!',
 
   // --- GET ---
   GET_ALL_SUCCESS: 'Lấy danh sách người dùng thành công!',

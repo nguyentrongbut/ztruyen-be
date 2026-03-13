@@ -9,6 +9,7 @@ import { Image } from '../../images/schemas/image.schema';
 
 // ** Enums
 import { GenderType, ProviderType, RoleType } from '../../configs/enums/user.enum';
+import { Frame } from '../../frames/schemas/frame.schemas';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -32,7 +33,7 @@ export class User {
   @Prop({ type: Types.ObjectId, ref: Image.name })
   avatar: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: Image.name })
+  @Prop({ type: Types.ObjectId, ref: Frame.name })
   avatar_frame: Types.ObjectId;
 
   @Prop()

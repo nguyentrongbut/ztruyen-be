@@ -157,7 +157,14 @@ export class UsersService {
       .populate([
         { path: 'avatar', select: 'url' },
         { path: 'cover', select: 'url' },
-        { path: 'avatar_frame', select: 'url' },
+        {
+          path: 'avatar_frame',
+          select: 'name image',
+          populate: {
+            path: 'image',
+            select: 'url',
+          },
+        },
       ])
       .select('-password -refreshToken -isDeleted -deletedAt');
   }
@@ -231,6 +238,44 @@ export class UsersService {
     }
 
     return result;
+  }
+
+  async updateProfileFrame(avatar_frame: string, user: IUser) {
+    await this.userModel
+      .findByIdAndUpdate(
+        user._id,
+        { avatar_frame: new Types.ObjectId(avatar_frame) },
+        { new: true },
+      )
+      .populate({
+        path: 'avatar_frame',
+        select: 'name image',
+        populate: {
+          path: 'image',
+          select: 'url',
+        },
+      });
+
+    return;
+  }
+
+  async updateUserFrame(id: string, avatar_frame: string) {
+    await this.userModel
+      .findByIdAndUpdate(
+        id,
+        { avatar_frame: new Types.ObjectId(avatar_frame) },
+        { new: true },
+      )
+      .populate({
+        path: 'avatar_frame',
+        select: 'name image',
+        populate: {
+          path: 'image',
+          select: 'url',
+        },
+      });
+
+    return;
   }
 
   async deleteProfile(user: IUser) {
@@ -348,7 +393,14 @@ export class UsersService {
       .populate([
         { path: 'avatar', select: 'url' },
         { path: 'cover', select: 'url' },
-        { path: 'avatar_frame', select: 'url' },
+        {
+          path: 'avatar_frame',
+          select: 'name image',
+          populate: {
+            path: 'image',
+            select: 'url',
+          },
+        },
       ])
       .select('-password -refreshToken -deletedAt')
       .exec();
@@ -374,7 +426,14 @@ export class UsersService {
       .populate([
         { path: 'avatar', select: 'url' },
         { path: 'cover', select: 'url' },
-        { path: 'avatar_frame', select: 'url' },
+        {
+          path: 'avatar_frame',
+          select: 'name image',
+          populate: {
+            path: 'image',
+            select: 'url',
+          },
+        },
       ])
       .select('-password -refreshToken -isDeleted');
   }
@@ -495,7 +554,14 @@ export class UsersService {
       .populate([
         { path: 'avatar', select: 'url' },
         { path: 'cover', select: 'url' },
-        { path: 'avatar_frame', select: 'url' },
+        {
+          path: 'avatar_frame',
+          select: 'name image',
+          populate: {
+            path: 'image',
+            select: 'url',
+          },
+        },
       ])
       .select('-password -refreshToken -isDeleted')
       .exec();

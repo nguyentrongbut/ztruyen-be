@@ -5,7 +5,8 @@ import { IsMongoId, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateFrameDto {
-  @ApiProperty({ example: 'khung thỏ con xinh xắn' })
+  @ApiProperty({ example: '' +
+      'khung thỏ con xinh xắn' })
   @IsNotEmpty()
   @IsString()
   name: string;

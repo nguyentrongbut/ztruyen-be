@@ -25,7 +25,11 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { RestoreAndDeleteMultiDto } from './dto/restore-and-delete-multi.dto';
-import { AdminChangePasswordDto, ChangePasswordDto } from './dto/change-password.dto';
+import {
+  AdminChangePasswordDto,
+  ChangePasswordDto,
+} from './dto/change-password.dto';
+import { UpdateProfileFrameDto } from './dto/update-user-frame.dto';
 
 // ** Decorator
 import { ResponseMessage, User } from '../decorator/customize';
@@ -45,7 +49,14 @@ import { RoleType } from '../configs/enums/user.enum';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 // ** Swagger
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @ApiTags('user')
 @ApiBearerAuth('access-token')
@@ -126,7 +137,10 @@ Sắp xếp kết quả:
   @ApiOperation({
     summary: 'Cập nhật thông tin cá nhân',
   })
-  updateProfile(@Body() updateProfileDto: UpdateProfileDto, @User() user: IUser) {
+  updateProfile(
+    @Body() updateProfileDto: UpdateProfileDto,
+    @User() user: IUser,
+  ) {
     return this.usersService.updateProfile(updateProfileDto, user);
   }
 
@@ -142,6 +156,25 @@ Sắp xếp kết quả:
     await this.usersService.deleteProfile(user);
     response.clearCookie('ZTC_token');
     return 'ok';
+  }
+
+  @Patch('profile/frame')
+  @ResponseMessage(USERS_MESSAGES.UPDATE_FRAME_SUCCESS)
+  @ApiOperation({
+    summary: 'Cập nhật khung avatar',
+  })
+  updateProfileFrame(@Body() dto: UpdateProfileFrameDto, @User() user: IUser) {
+    return this.usersService.updateProfileFrame(dto.avatar_frame, user);
+  }
+
+  @Patch('frame/:id')
+  @Roles(RoleType.ADMIN)
+  @ResponseMessage(USERS_MESSAGES.UPDATE_SUCCESS)
+  @ApiOperation({
+    summary: 'Cập nhật thông tin người dùng (Chỉ Admin có quyền)',
+  })
+  updateUserFrame(@Param('id') id: string, @Body() dto: UpdateProfileFrameDto) {
+    return this.usersService.updateUserFrame(id, dto.avatar_frame);
   }
 
   @Patch('change-password')
