@@ -97,6 +97,14 @@ API truyện tranh, Data truyện tranh miễn phí.`
       'upload',
       'Upload ảnh',
     )
+    .addTag(
+      'favorite',
+      'Yêu thích',
+    )
+    .addTag(
+      'frame',
+      'Khung',
+    )
 
 
     .build();

@@ -19,6 +19,7 @@ import { UploadTelegramModule } from './upload-telegram/upload-telegram.module';
 import { ImagesModule } from './images/images.module';
 import { EmailModule } from './email/email.module';
 import { FramesModule } from './frames/frames.module';
+import { FavoritesModule } from './favorites/favorites.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { FramesModule } from './frames/frames.module';
     AuthModule,
     UsersModule,
     FramesModule,
+    FavoritesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
