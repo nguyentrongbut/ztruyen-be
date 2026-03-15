@@ -158,15 +158,6 @@ Sắp xếp kết quả:
     return 'ok';
   }
 
-  @Patch('profile/frame')
-  @ResponseMessage(USERS_MESSAGES.UPDATE_FRAME_SUCCESS)
-  @ApiOperation({
-    summary: 'Cập nhật khung avatar',
-  })
-  updateProfileFrame(@Body() dto: UpdateProfileFrameDto, @User() user: IUser) {
-    return this.usersService.updateProfileFrame(dto.avatar_frame, user);
-  }
-
   @Patch('frame/:id')
   @Roles(RoleType.ADMIN)
   @ResponseMessage(USERS_MESSAGES.UPDATE_SUCCESS)

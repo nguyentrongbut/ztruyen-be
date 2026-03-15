@@ -41,10 +41,9 @@ export class FramesController {
   }
 
   @Get()
-  @Roles(RoleType.ADMIN)
   @ResponseMessage(FRAMES_MESSAGES.GET_ALL_SUCCESS)
   @ApiOperation({
-    summary: 'Danh sách khung avatar (Chỉ Admin có quyền)',
+    summary: 'Danh sách khung avatar',
     description: `
 Hỗ trợ filter động trực tiếp qua query string(name, createdAt, updatedAt).
 
