@@ -60,6 +60,8 @@ import { ImagesService } from '../images/images.service';
 
 // ** Dayjs
 import dayjs from 'dayjs';
+import { removeVietnameseTones } from '../utils/removeVietnameseTones';
+import { generateUniqueName } from '../utils/generateUniqueName';
 
 @Injectable()
 export class UsersService {
@@ -95,15 +97,20 @@ export class UsersService {
   }
 
   async register(user: RegisterUserDto) {
-    const { email, password } = user;
+    const { email, password, name } = user;
 
     // check email exists
     if (await this.userModel.findOne({ email })) {
       throw new BadRequestException(USERS_MESSAGES.EMAIL_EXISTED);
     }
 
+    // check name exists
+    if (await this.userModel.findOne({ name })) {
+      throw new BadRequestException(USERS_MESSAGES.NAME_EXISTED);
+    }
+
     const hash = this.getHashPassword(password);
-    return this.userModel.create({ ...user, password: hash });
+    return this.userModel.create({ ...user, password: hash, name_unsigned: removeVietnameseTones(name) });
   }
 
   // forgot password
@@ -146,7 +153,23 @@ export class UsersService {
   }
 
   async createUserSocial(createUserSocialDto: CreateUserSocialDto) {
-    return this.userModel.create(createUserSocialDto);
+
+    const { email, name } = createUserSocialDto;
+
+    if (await this.userModel.exists({ email })) {
+      throw new BadRequestException(USERS_MESSAGES.EMAIL_EXISTED);
+    }
+
+    // generate unique name
+    const uniqueName = await generateUniqueName(this.userModel, name);
+
+    const nameUnsigned = removeVietnameseTones(uniqueName);
+
+    return this.userModel.create({
+      ...createUserSocialDto,
+      name: uniqueName,
+      name_unsigned: nameUnsigned,
+    });
   }
 
   // Profile
@@ -201,6 +224,8 @@ export class UsersService {
 
     if (name !== undefined) {
       updateData.name = name;
+
+      updateData.name_unsigned = removeVietnameseTones(name)
     }
 
     if (avatar_frame !== undefined) {
@@ -358,6 +383,25 @@ export class UsersService {
 
     filter.isDeleted = false;
 
+    const keyword = filter.search
+
+    if (keyword) {
+
+      const unsigned = removeVietnameseTones(keyword)
+
+      const regex = unsigned
+        .trim()
+        .split(/\s+/)
+        .join(".*")
+
+      filter.name_unsigned = {
+        $regex: regex,
+        $options: "i"
+      }
+
+      delete filter.search
+    }
+
     filter._id = { $ne: currentUserId };
 
     const offset = (+page - 1) * +limit;
@@ -452,6 +496,7 @@ export class UsersService {
 
     if (name !== undefined) {
       updateData.name = name;
+      updateData.name_unsigned = removeVietnameseTones(name)
     }
 
     if (avatar_frame !== undefined) {
@@ -520,6 +565,25 @@ export class UsersService {
     delete filter.limit;
 
     filter.isDeleted = true;
+
+    const keyword = filter.search
+
+    if (keyword) {
+
+      const unsigned = removeVietnameseTones(keyword)
+
+      const regex = unsigned
+        .trim()
+        .split(/\s+/)
+        .join(".*")
+
+      filter.name_unsigned = {
+        $regex: regex,
+        $options: "i"
+      }
+
+      delete filter.search
+    }
 
     const offset = (+page - 1) * +limit;
     const defaultLimit = +limit ? +limit : 10;

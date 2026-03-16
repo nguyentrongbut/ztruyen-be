@@ -21,10 +21,19 @@ import { FRAMES_MESSAGES } from '../configs/messages/frame.message';
 
 // ** api query params
 import aqp from 'api-query-params';
-import { validateMongoId, validateMongoIds } from '../utils/mongoose.util';
+
+// ** Frame
 import { IFrame } from './frames.interface';
+
+// ** Type
 import { Types } from 'mongoose';
+
+// ** Service
 import { ImagesService } from '../images/images.service';
+
+// ** Util
+import { removeVietnameseTones } from '../utils/removeVietnameseTones';
+import { validateMongoId, validateMongoIds } from '../utils/mongoose.util';
 
 @Injectable()
 export class FramesService {
@@ -37,25 +46,43 @@ export class FramesService {
   async create(createFrameDto: CreateFrameDto) {
     const { name } = createFrameDto;
 
-    // check name exists
     if (await this.frameModel.findOne({ name })) {
       throw new BadRequestException(FRAMES_MESSAGES.NAME_EXISTED);
     }
 
-    const newFrame = await this.frameModel.create(createFrameDto);
+    const newFrame = await this.frameModel.create({
+      ...createFrameDto,
+      name_unsigned: removeVietnameseTones(name),
+    });
 
     return {
-      _id: newFrame?._id,
-      createdAt: newFrame?.createdAt,
+      _id: newFrame._id,
+      createdAt: newFrame.createdAt,
     };
   }
 
   async findAll(page: number, limit: number, qs: string) {
     const { filter, sort } = aqp(qs);
+
     delete filter.page;
     delete filter.limit;
 
     filter.isDeleted = false;
+
+    const keyword = filter.search;
+
+    if (keyword) {
+      const unsigned = removeVietnameseTones(keyword);
+
+      const regex = unsigned.trim().split(/\s+/).join('.*');
+
+      filter.name_unsigned = {
+        $regex: regex,
+        $options: 'i',
+      };
+
+      delete filter.search;
+    }
 
     const offset = (+page - 1) * +limit;
     const defaultLimit = +limit ? +limit : 10;
@@ -68,16 +95,14 @@ export class FramesService {
       .skip(offset)
       .limit(defaultLimit)
       .sort(sort as any)
-      .populate([
-        { path: 'image', select: 'url' }
-      ])
+      .populate([{ path: 'image', select: 'url' }])
       .select('-isDeleted -deletedAt')
       .exec();
 
     return {
       meta: {
         page,
-        limit,
+        limit: defaultLimit,
         totalPages,
         totalItems,
       },
@@ -90,9 +115,7 @@ export class FramesService {
       .findOne({
         _id: id,
       })
-      .populate([
-        { path: 'image', select: 'url' }
-      ])
+      .populate([{ path: 'image', select: 'url' }])
       .select('-isDeleted -deletedAt');
   }
 
@@ -119,6 +142,8 @@ export class FramesService {
 
     if (updateFrameDto.name !== undefined) {
       updateData.name = updateFrameDto.name;
+
+      updateData.name_unsigned = removeVietnameseTones(updateFrameDto.name)
     }
 
     const result = await this.frameModel.updateOne(
@@ -137,10 +162,7 @@ export class FramesService {
   async remove(id: string) {
     validateMongoId(id);
 
-    const frame = await this.frameModel
-      .findById(id)
-      .select('image')
-      .lean();
+    const frame = await this.frameModel.findById(id).select('image').lean();
 
     if (!frame) {
       throw new NotFoundException(FRAMES_MESSAGES.INVALID_ID);

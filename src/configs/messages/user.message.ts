@@ -9,6 +9,7 @@ export const USERS_MESSAGES = {
 
   // --- CREATE / UPDATE ---
   EMAIL_EXISTED: 'Email đã được sử dụng bởi người dùng khác!',
+  NAME_EXISTED: 'Tên đã được sử dụng bởi người dùng khác!',
   CREATE_SUCCESS: 'Tạo người dùng thành công!',
   UPDATE_SUCCESS: 'Cập nhật người dùng thành công!',
   UPDATE_PROFILE_SUCCESS: 'Cập nhật hồ sơ thành công!',

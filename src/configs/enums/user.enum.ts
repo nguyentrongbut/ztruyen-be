@@ -13,5 +13,5 @@ export enum RoleType {
 export enum GenderType {
   MALE = 'male',
   FEMALE = 'female',
-  LGBT = 'lgbt',
+  OTHER = 'other',
 }

@@ -48,9 +48,14 @@ export class FavoritesController {
     name: 'sort',
     required: false,
     description: `
-Sắp xếp kết quả:
-- createdAt (tăng dần)
-- -createdAt (giảm dần)
+Hỗ trợ filter động trực tiếp qua query string(comic_name, createdAt, updatedAt).
+
+Ví dụ:
+- /frame?comic_name=tienkiemkihiep
+- /frame?sort=-comic_name
+- /frame?search=tienk
+- /frame?createdAt=2026-01-25T11:30:41.401Z&createdAt<=2026-02-15T14:50:27.251Z
+- /frame?comic_name=tienkiemkihiep&sort=name
 `,
   })
   getFavorites(

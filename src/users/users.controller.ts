@@ -86,7 +86,7 @@ Hỗ trợ filter động trực tiếp qua query string(email, name, age, gende
 Ví dụ:
 - /users?role=admin
 - /users?sort=-age
-- /users?name=/cloly/i
+- /users?search=cloly
 - /users?age=20&age<=25
 - /users?age>=20&age<=25
 - /users?role=user&gender=male&sort=name
@@ -234,7 +234,7 @@ Hỗ trợ filter động trực tiếp qua query string(email, name, age, gende
 Ví dụ:
 - /users?role=admin
 - /users?sort=-age
-- /users?name=/cloly/i
+- /users?search=cloly
 - /users?age=20&age<=25
 - /users?age>=20&age<=25
 - /users?role=user&gender=male&sort=name

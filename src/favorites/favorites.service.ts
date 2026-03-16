@@ -14,6 +14,9 @@ import { ToggleFavoriteDto } from './dto/toggle-favorite.dto';
 // ** api query params
 import aqp from 'api-query-params';
 
+// ** Util
+import { removeVietnameseTones } from '../utils/removeVietnameseTones';
+
 @Injectable()
 export class FavoritesService {
   constructor(
@@ -27,7 +30,7 @@ export class FavoritesService {
       comic_slug: dto.comic_slug,
     });
 
-    // nếu đã favorite → remove
+    // favorite → remove
     if (existed) {
       await this.favoriteModel.deleteOne({
         userId,
@@ -39,10 +42,11 @@ export class FavoritesService {
       };
     }
 
-    // nếu chưa → add
+    // add
     await this.favoriteModel.create({
       userId,
       ...dto,
+      comic_name_unsigned: removeVietnameseTones(dto.comic_name),
     });
 
     return {
@@ -57,6 +61,24 @@ export class FavoritesService {
     delete filter.limit;
 
     filter.userId = userId;
+
+    const keyword = filter.search;
+
+    if (keyword) {
+      const unsigned = removeVietnameseTones(keyword);
+
+      const regex = unsigned
+        .trim()
+        .split(/\s+/)
+        .join('.*');
+
+      filter.comic_name_unsigned = {
+        $regex: regex,
+        $options: 'i',
+      };
+
+      delete filter.search;
+    }
 
     const offset = (+page - 1) * +limit;
     const defaultLimit = +limit ? +limit : 10;

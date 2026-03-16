@@ -17,6 +17,9 @@ export class Frame {
   @Prop({ required: true, unique: true })
   name: string;
 
+  @Prop({ index: true })
+  name_unsigned: string;
+
   @Prop()
   deletedAt: Date;
 

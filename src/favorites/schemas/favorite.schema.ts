@@ -11,7 +11,6 @@ export type FavoriteDocument = HydratedDocument<Favorite>;
 
 @Schema({ timestamps: true })
 export class Favorite {
-
   @Prop({ type: Types.ObjectId, ref: User.name, required: true })
   userId: Types.ObjectId;
 
@@ -21,6 +20,9 @@ export class Favorite {
   @Prop()
   comic_name: string;
 
+  @Prop({ index: true })
+  comic_name_unsigned: string;
+
   @Prop()
   comic_cover: string;
 }
@@ -28,3 +30,4 @@ export class Favorite {
 export const FavoriteSchema = SchemaFactory.createForClass(Favorite);
 
 FavoriteSchema.index({ userId: 1, comic_slug: 1 }, { unique: true });
+FavoriteSchema.index({ userId: 1, comic_name_unsigned: 1, });

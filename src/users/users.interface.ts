@@ -4,6 +4,7 @@ import { Types } from 'mongoose';
 export interface IUser {
   _id: string;
   name: string;
+  name_unsigned: string;
   email: string;
   role: string;
   avatar_frame?: Types.ObjectId;

@@ -1,5 +1,15 @@
 // ** Nest Js
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
 
 // ** Services
 import { FramesService } from './frames.service';
@@ -10,7 +20,12 @@ import { UpdateFrameDto } from './dto/update-frame.dto';
 import { RestoreAndDeleteMultiDto } from '../users/dto/restore-and-delete-multi.dto';
 
 // ** Swagger
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 
 // ** Guards
 import { RolesGuard } from '../guards/roles.guard';
@@ -50,7 +65,7 @@ Hỗ trợ filter động trực tiếp qua query string(name, createdAt, update
 Ví dụ:
 - /frame?name=khungthocon
 - /frame?sort=-name
-- /frame?name=/khungthocon/i
+- /frame?search=khungthocon
 - /frame?createdAt=2026-01-25T11:30:41.401Z&createdAt<=2026-02-15T14:50:27.251Z
 - /frame?name=khungthocon&sort=name
 `,
