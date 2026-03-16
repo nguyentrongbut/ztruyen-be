@@ -105,6 +105,10 @@ API truyện tranh, Data truyện tranh miễn phí.`
       'frame',
       'Khung',
     )
+    .addTag(
+      'comment',
+      'Bình luận',
+    )
 
 
     .build();

@@ -20,6 +20,7 @@ import { ImagesModule } from './images/images.module';
 import { EmailModule } from './email/email.module';
 import { FramesModule } from './frames/frames.module';
 import { FavoritesModule } from './favorites/favorites.module';
+import { CommentsModule } from './comments/comments.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { FavoritesModule } from './favorites/favorites.module';
     UsersModule,
     FramesModule,
     FavoritesModule,
+    CommentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

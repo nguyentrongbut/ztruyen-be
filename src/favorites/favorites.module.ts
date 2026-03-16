@@ -8,15 +8,11 @@ import { FavoritesService } from './favorites.service';
 // ** Controller
 import { FavoritesController } from './favorites.controller';
 
-// ** Module
-import { ImagesModule } from '../images/images.module';
-
 // ** Schema
 import { Favorite, FavoriteSchema } from './schemas/favorite.schema';
 
 @Module({
   imports: [
-    ImagesModule,
     MongooseModule.forFeature([{ name: Favorite.name, schema: FavoriteSchema }]),
   ],
   controllers: [FavoritesController],
