@@ -207,6 +207,20 @@ export class UsersService {
     const updateData: Partial<IUser> = {};
 
     if (
+      updateProfileDto.name &&
+      updateProfileDto.name !== currentUser.name
+    ) {
+      const nameExists = await this.userModel.exists({
+        name: updateProfileDto.name,
+        _id: { $ne: user._id },
+      });
+
+      if (nameExists) {
+        throw new BadRequestException(USERS_MESSAGES.NAME_EXISTED);
+      }
+    }
+
+    if (
       updateProfileDto.avatar &&
       updateProfileDto.avatar !== currentUser.avatar?.toString()
     ) {
@@ -476,6 +490,20 @@ export class UsersService {
     }
 
     const updateData: Partial<IUser> = {};
+
+    if (
+      updateUserDto.name &&
+      updateUserDto.name !== currentUser.name
+    ) {
+      const nameExists = await this.userModel.exists({
+        name: updateUserDto.name,
+        _id: { $ne: id },
+      });
+
+      if (nameExists) {
+        throw new BadRequestException(USERS_MESSAGES.NAME_EXISTED);
+      }
+    }
 
     if (
       updateUserDto.avatar &&

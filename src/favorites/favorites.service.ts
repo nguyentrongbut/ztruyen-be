@@ -1,5 +1,5 @@
 // ** NestJs
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 
 // ** Schemas
@@ -16,6 +16,7 @@ import aqp from 'api-query-params';
 
 // ** Util
 import { removeVietnameseTones } from '../utils/removeVietnameseTones';
+import { FAVORITE_MESSAGES } from '../configs/messages/favorite.message';
 
 @Injectable()
 export class FavoritesService {
@@ -67,10 +68,7 @@ export class FavoritesService {
     if (keyword) {
       const unsigned = removeVietnameseTones(keyword);
 
-      const regex = unsigned
-        .trim()
-        .split(/\s+/)
-        .join('.*');
+      const regex = unsigned.trim().split(/\s+/).join('.*');
 
       filter.comic_name_unsigned = {
         $regex: regex,
@@ -113,6 +111,42 @@ export class FavoritesService {
 
     return {
       isFavorite: !!exist,
+    };
+  }
+
+  async deleteFavorite(id: string, userId: string) {
+    const result = await this.favoriteModel.findOneAndDelete({
+      _id: id,
+      userId,
+    });
+
+    if (!result) {
+      throw new NotFoundException(FAVORITE_MESSAGES.NOT_FOUND);
+    }
+
+    return {
+      deleted: true,
+    };
+  }
+
+  async deleteMultiFavorite(ids: string[], userId: string) {
+    const favorites = await this.favoriteModel.find({
+      _id: { $in: ids },
+      userId,
+    });
+
+    if (!favorites.length) {
+      throw new NotFoundException(FAVORITE_MESSAGES.NOT_FOUND);
+    }
+
+    const validIds = favorites.map((item) => item._id);
+
+    await this.favoriteModel.deleteMany({
+      _id: { $in: validIds },
+    });
+
+    return {
+      deletedCount: validIds.length,
     };
   }
 }

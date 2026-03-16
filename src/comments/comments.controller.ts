@@ -1,87 +1,34 @@
-// ** Nestjs
-import {
-  Controller,
-  Post,
-  Get,
-  Body,
-  Param,
-  Query
-} from '@nestjs/common'
+import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { CommentsService } from './comments.service';
+import { CreateCommentDto } from './dto/create-comment.dto';
+import { UpdateCommentDto } from './dto/update-comment.dto';
 
-// ** Swagger
-import {
-  ApiBearerAuth,
-  ApiOperation,
-  ApiQuery,
-  ApiTags
-} from '@nestjs/swagger'
-
-// ** Service
-import { CommentsService } from './comments.service'
-
-// ** DTO
-import { CreateCommentDto } from './dto/create-comment.dto'
-import { LikeCommentDto } from './dto/like-comment.dto'
-import { ReportCommentDto } from './dto/report-comment.dto'
-
-// ** Interface
-import { IUser } from '../users/users.interface'
-
-// ** Decorator
-import { ResponseMessage, User } from '../decorator/customize'
-
-@ApiTags('comment')
-@ApiBearerAuth('access-token')
-@Controller('comment')
+@Controller('comments')
 export class CommentsController {
-
-  constructor(
-    private readonly commentsService: CommentsService
-  ) {}
+  constructor(private readonly commentsService: CommentsService) {}
 
   @Post()
-  @ResponseMessage('Tạo bình luận thành công')
-  @ApiOperation({ summary: 'Tạo comment hoặc reply' })
-  create(
-    @Body() dto: CreateCommentDto,
-    @User() user: IUser
-  ){
-    return this.commentsService.create(user._id, dto)
-  }
-
-  @Post('like')
-  @ResponseMessage('Like comment thành công')
-  like(
-    @Body() dto: LikeCommentDto,
-    @User() user: IUser
-  ){
-    return this.commentsService.like(user._id, dto.commentId)
-  }
-
-  @Post('report')
-  @ResponseMessage('Report comment thành công')
-  report(
-    @Body() dto: ReportCommentDto,
-    @User() user: IUser
-  ){
-    return this.commentsService.report(user._id, dto)
+  create(@Body() createCommentDto: CreateCommentDto) {
+    return this.commentsService.create(createCommentDto);
   }
 
   @Get()
-  @ResponseMessage('Lấy danh sách comment')
-  @ApiQuery({ name: 'page', required: false, example: 1 })
-  @ApiQuery({ name: 'limit', required: false, example: 10 })
-  getComments(
-    @Query('page') page:number,
-    @Query('limit') limit:number,
-    @Query() qs:string
-  ){
-    return this.commentsService.getComments(+page,+limit,qs)
+  findAll() {
+    return this.commentsService.findAll();
   }
 
-  @Get('replies/:id')
-  @ResponseMessage('Lấy danh sách replies')
-  getReplies(@Param('id') id:string){
-    return this.commentsService.getReplies(id)
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.commentsService.findOne(+id);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateCommentDto: UpdateCommentDto) {
+    return this.commentsService.update(+id, updateCommentDto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.commentsService.remove(+id);
   }
 }

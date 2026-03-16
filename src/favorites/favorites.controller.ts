@@ -1,5 +1,5 @@
 // ** Nestjs
-import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Delete } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -21,6 +21,7 @@ import { ResponseMessage, User } from '../decorator/customize';
 
 // ** Message
 import { FAVORITE_MESSAGES } from '../configs/messages/favorite.message';
+import { DeleteMultiFavoriteDto } from './dto/delete-multi-favorite.dto';
 
 @ApiTags('favorite')
 @ApiBearerAuth('access-token')
@@ -74,5 +75,26 @@ Ví dụ:
   })
   checkFavorite(@Param('slug') slug: string, @User() user: IUser) {
     return this.favoritesService.checkFavorite(user._id, slug);
+  }
+
+  @Delete(':id')
+  @ResponseMessage(FAVORITE_MESSAGES.DELETE_SUCCESS)
+  @ApiOperation({
+    summary: 'Xóa truyện khỏi danh sách yêu thích',
+  })
+  deleteFavorite(@Param('id') id: string, @User() user: IUser) {
+    return this.favoritesService.deleteFavorite(id, user._id);
+  }
+
+  @Delete('delete-multi')
+  @ResponseMessage(FAVORITE_MESSAGES.DELETE_MULTI_SUCCESS)
+  @ApiOperation({
+    summary: 'Xóa nhiều truyện yêu thích',
+  })
+  deleteMultiFavorite(
+    @Body() dto: DeleteMultiFavoriteDto,
+    @User() user: IUser,
+  ) {
+    return this.favoritesService.deleteMultiFavorite(dto.ids, user._id);
   }
 }
