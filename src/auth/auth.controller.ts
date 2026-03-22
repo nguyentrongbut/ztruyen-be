@@ -92,6 +92,8 @@ export class AuthController {
     response.cookie('ZTC_token', refresh_token, {
       httpOnly: true,
       maxAge: ms(this.configService.get<string>('JWT_REFRESH_TOKEN_EXPIRE')),
+      sameSite: 'none',
+      secure: true,
     });
 
     return { access_token: accessToken, user };
@@ -136,6 +138,8 @@ export class AuthController {
     response.cookie('ZTC_token', refreshToken, {
       httpOnly: true,
       maxAge: ms(this.configService.get<string>('JWT_REFRESH_TOKEN_EXPIRE')),
+      sameSite: 'none',
+      secure: true,
     });
 
     return response.redirect(redirectUrl);
@@ -156,6 +160,8 @@ export class AuthController {
     response.cookie('ZTC_token', refreshToken, {
       httpOnly: true,
       maxAge: ms(this.configService.get<string>('JWT_REFRESH_TOKEN_EXPIRE')),
+      sameSite: 'none',
+      secure: true,
     });
 
     return response.redirect(redirectUrl);
@@ -198,6 +204,8 @@ export class AuthController {
     response.cookie('ZTC_token', newRefreshToken, {
       httpOnly: true,
       maxAge: ms(this.configService.get<string>('JWT_REFRESH_TOKEN_EXPIRE')),
+      sameSite: 'none',
+      secure: true,
     });
 
     return { access_token: accessToken, user };
@@ -214,7 +222,10 @@ export class AuthController {
     @User() user: IUser,
   ) {
     await this.authService.logout(user);
-    response.clearCookie('ZTC_token');
+    response.clearCookie('ZTC_token', {
+      sameSite: 'none',
+      secure: true,
+    });
     return 'ok';
   }
 
