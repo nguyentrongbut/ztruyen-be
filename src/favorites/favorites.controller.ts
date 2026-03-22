@@ -77,7 +77,7 @@ Ví dụ:
     return this.favoritesService.checkFavorite(user._id, slug);
   }
 
-  @Delete(':id')
+  @Delete('delete/:id')
   @ResponseMessage(FAVORITE_MESSAGES.DELETE_SUCCESS)
   @ApiOperation({
     summary: 'Xóa truyện khỏi danh sách yêu thích',

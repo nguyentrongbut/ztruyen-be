@@ -6,7 +6,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Favorite, FavoriteDocument } from './schemas/favorite.schema';
 
 // ** Mongoose
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 
 // ** DTO
 import { ToggleFavoriteDto } from './dto/toggle-favorite.dto';
@@ -130,6 +130,7 @@ export class FavoritesService {
   }
 
   async deleteMultiFavorite(ids: string[], userId: string) {
+
     const favorites = await this.favoriteModel.find({
       _id: { $in: ids },
       userId,
