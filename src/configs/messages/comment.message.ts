@@ -10,7 +10,7 @@ export const COMMENT_MESSAGES = {
   // admin
   ADMIN_GET_ALL_SUCCESS: 'Lấy danh sách bình luận (admin) thành công',
   ADMIN_GET_ONE_SUCCESS: 'Lấy chi tiết bình luận thành công',
-  ADMIN_DELETE_SUCCESS: 'Xóa cứng bình luận thành công',
+  ADMIN_DELETE_SUCCESS: 'Xóa bình luận thành công',
   ADMIN_BULK_DELETE_SUCCESS: 'Xóa nhiều bình luận thành công',
   ADMIN_GET_REPORTS_SUCCESS: 'Lấy danh sách báo cáo thành công',
   ADMIN_RESOLVE_REPORT_SUCCESS: 'Xử lý báo cáo thành công',

@@ -166,7 +166,9 @@ export class CommentsService {
       this.commentModel.countDocuments(filter),
       this.commentModel
         .find(finalFilter)
-        .select('-comicName_unsigned -replyTo -isDeleted -deletedAt -__v -comicName')
+        .select(
+          '-comicName_unsigned -replyTo -isDeleted -deletedAt -__v -comicName',
+        )
         .populate({
           path: 'userId',
           select: 'name avatar avatar_frame',
@@ -283,7 +285,9 @@ export class CommentsService {
       this.commentModel.countDocuments(filter),
       this.commentModel
         .find(filter)
-        .select('-comicName_unsigned -isDeleted -deletedAt -__v -comicName -replyCount -comicSlug -chapterName -chapterId -page')
+        .select(
+          '-comicName_unsigned -isDeleted -deletedAt -__v -comicName -replyCount -comicSlug -chapterName -chapterId -page',
+        )
         .populate({
           path: 'userId',
           select: 'name avatar avatar_frame',
@@ -297,7 +301,7 @@ export class CommentsService {
           ],
         })
         .populate('replyTo', 'name')
-        .sort((sort as any) || { createdAt: 1 })
+        .sort((sort as any) || { createdAt: -1 })
         .skip(offset)
         .limit(safeLimit),
     ]);
@@ -382,8 +386,9 @@ export class CommentsService {
     delete filter.page;
     delete filter.limit;
 
-    if (filter.comicName) {
-      const unsigned = removeVietnameseTones(filter.comicName);
+    const keyword = filter.search;
+    if (keyword) {
+      const unsigned = removeVietnameseTones(keyword);
       const regex = unsigned.trim().split(/\s+/).join('.*');
 
       filter.comicName_unsigned = {
@@ -391,7 +396,7 @@ export class CommentsService {
         $options: 'i',
       };
 
-      delete filter.comicName;
+      delete filter.search;
     }
 
     const safePage = Math.max(1, page || 1);
@@ -452,6 +457,50 @@ export class CommentsService {
 
       await session.commitTransaction();
       return { deleted: true };
+    } catch (e) {
+      await session.abortTransaction();
+      throw e;
+    } finally {
+      session.endSession();
+    }
+  }
+
+  async adminBulkDelete(ids: string[]) {
+    const session = await this.connection.startSession();
+    session.startTransaction();
+
+    try {
+      const comments = await this.commentModel
+        .find({ _id: { $in: ids } })
+        .select('_id');
+
+      if (!comments.length) {
+        throw new NotFoundException('Không tìm thấy comment nào');
+      }
+
+      const foundIds = comments.map((c) => c._id.toString());
+
+      const replies = await this.commentModel
+        .find({ parent: { $in: foundIds } })
+        .select('_id');
+      const replyIds = replies.map((r) => r._id);
+
+      const allIds = [...foundIds, ...replyIds.map((id) => id.toString())];
+
+      await this.commentModel.deleteMany({ _id: { $in: allIds } }, { session });
+
+      await this.likeModel.deleteMany(
+        { commentId: { $in: allIds } },
+        { session },
+      );
+
+      await this.reportModel.deleteMany(
+        { commentId: { $in: allIds } },
+        { session },
+      );
+
+      await session.commitTransaction();
+      return { deleted: true, count: allIds.length };
     } catch (e) {
       await session.abortTransaction();
       throw e;

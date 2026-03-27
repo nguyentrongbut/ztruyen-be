@@ -28,6 +28,7 @@ import { COMMENT_MESSAGES } from '../configs/messages/comment.message';
 import { ResolveReportDto } from './dto/resolve-report.dto';
 import { IUser } from '../users/users.interface';
 import { CreateReplyDto } from './dto/create-reply.dto';
+import { BulkDeleteCommentDto } from './dto/bulk-delete.comment.dto';
 
 @ApiTags('comment')
 @ApiBearerAuth('access-token')
@@ -125,16 +126,13 @@ Ví dụ:
 
   /* ================= ADMIN ================= */
 
-  @Get('admin/all')
+  @Get('admin')
   @Roles(RoleType.ADMIN)
   @ApiOperation({ summary: 'Admin lấy tất cả bình luận' })
   @ResponseMessage(COMMENT_MESSAGES.ADMIN_GET_ALL_SUCCESS)
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })
-  @ApiQuery({ name: 'comicName', required: false })
-  @ApiQuery({ name: 'comicSlug', required: false })
-  @ApiQuery({ name: 'chapterId', required: false })
-  @ApiQuery({ name: 'sort', required: false })
+  @ApiQuery({ name: 'search', required: false })
   adminGetAll(
     @Query('page') page: number,
     @Query('limit') limit: number,
@@ -143,7 +141,15 @@ Ví dụ:
     return this.service.adminGetComments(+page, +limit, qs);
   }
 
-  @Delete('admin/hard/:id')
+  @Delete('admin/delete-multi')
+  @Roles(RoleType.ADMIN)
+  @ApiOperation({ summary: 'Admin xóa nhiều comment cùng lúc' })
+  @ResponseMessage(COMMENT_MESSAGES.ADMIN_DELETE_SUCCESS)
+  adminBulkDelete(@Body() dto: BulkDeleteCommentDto) {
+    return this.service.adminBulkDelete(dto.ids);
+  }
+
+  @Delete('admin/:id')
   @Roles(RoleType.ADMIN)
   @ApiOperation({ summary: 'Admin xóa comment' })
   @ResponseMessage(COMMENT_MESSAGES.ADMIN_DELETE_SUCCESS)
