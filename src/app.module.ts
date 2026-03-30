@@ -21,6 +21,8 @@ import { EmailModule } from './email/email.module';
 import { FramesModule } from './frames/frames.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { CommentsModule } from './comments/comments.module';
+import { EmojisModule } from './emojis/emojis.module';
+import { EmojiCategoriesModule } from './emoji-categories/emoji-categories.module';
 
 @Module({
   imports: [
@@ -46,6 +48,8 @@ import { CommentsModule } from './comments/comments.module';
     FramesModule,
     FavoritesModule,
     CommentsModule,
+    EmojisModule,
+    EmojiCategoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

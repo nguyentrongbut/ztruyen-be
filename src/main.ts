@@ -109,6 +109,14 @@ API truyện tranh, Data truyện tranh miễn phí.`
       'comment',
       'Bình luận',
     )
+    .addTag(
+      'emoji',
+      'emoji picker',
+    )
+    .addTag(
+      'emoji-category',
+      'danh mục emoji',
+    )
 
 
     .build();
