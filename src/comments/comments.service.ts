@@ -432,10 +432,7 @@ export class CommentsService {
 
     try {
       const comment = await this.commentModel.findById(id);
-
-      if (!comment) {
-        throw new NotFoundException('Comment không tồn tại');
-      }
+      if (!comment) throw new NotFoundException('Comment không tồn tại');
 
       const replies = await this.commentModel
         .find({ parent: id })
@@ -444,6 +441,15 @@ export class CommentsService {
 
       await this.commentModel.deleteOne({ _id: id }, { session });
       await this.commentModel.deleteMany({ parent: id }, { session });
+
+      // Cập nhật replyCount của parent nếu comment bị xóa là reply
+      if (comment.parent) {
+        await this.commentModel.updateOne(
+          { _id: comment.parent },
+          { $inc: { replyCount: -1 } },
+          { session },
+        );
+      }
 
       await this.likeModel.deleteMany(
         { commentId: { $in: [id, ...replyIds] } },
@@ -472,11 +478,10 @@ export class CommentsService {
     try {
       const comments = await this.commentModel
         .find({ _id: { $in: ids } })
-        .select('_id');
+        .select('_id parent');
 
-      if (!comments.length) {
+      if (!comments.length)
         throw new NotFoundException('Không tìm thấy comment nào');
-      }
 
       const foundIds = comments.map((c) => c._id.toString());
 
@@ -488,6 +493,18 @@ export class CommentsService {
       const allIds = [...foundIds, ...replyIds.map((id) => id.toString())];
 
       await this.commentModel.deleteMany({ _id: { $in: allIds } }, { session });
+
+      // Cập nhật replyCount cho các parent của những comment là reply
+      const replyComments = comments.filter((c) => c.parent);
+      if (replyComments.length) {
+        const bulkOps = replyComments.map((c) => ({
+          updateOne: {
+            filter: { _id: c.parent },
+            update: { $inc: { replyCount: -1 } },
+          },
+        }));
+        await this.commentModel.bulkWrite(bulkOps, { session });
+      }
 
       await this.likeModel.deleteMany(
         { commentId: { $in: allIds } },
