@@ -2,7 +2,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 // ** Class validator
-import { IsEnum, IsMongoId, IsNotEmpty, IsString, ValidateIf } from 'class-validator';
+import { IsBoolean, IsEnum, IsMongoId, IsNotEmpty, IsOptional, IsString, ValidateIf } from 'class-validator';
 
 // ** Enum
 import { EmojiType } from '../../configs/enums/emoji.enum';
@@ -31,4 +31,9 @@ export class CreateEmojiDto {
   @ApiProperty({ example: '664f...' })
   @IsMongoId()
   category: string;
+
+  @ApiProperty({ required: false, example: false, default: false })
+  @IsBoolean()
+  @IsOptional()
+  isGif?: boolean;
 }

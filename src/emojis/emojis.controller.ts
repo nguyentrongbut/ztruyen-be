@@ -1,5 +1,19 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+} from '@nestjs/swagger';
 
 import { EmojisService } from './emojis.service';
 import { CreateEmojiDto } from './dto/create-emoji.dto';
@@ -65,12 +79,20 @@ export class EmojisController {
     return this.service.create(dto);
   }
 
-  @Patch('admin/delete-multi')
+  @Delete('admin/delete-multi')
   @Roles(RoleType.ADMIN)
   @ResponseMessage(EMOJI_MESSAGES.BULK_DELETE_SUCCESS)
   @ApiOperation({ summary: 'Admin xóa nhiều emoji' })
   bulkDelete(@Body() dto: BulkDeleteEmojiDto) {
     return this.service.bulkDelete(dto);
+  }
+
+  @Delete('admin/:id')
+  @Roles(RoleType.ADMIN)
+  @ResponseMessage(EMOJI_MESSAGES.DELETE_SUCCESS)
+  @ApiOperation({ summary: 'Admin xóa một emoji' })
+  delete(@Param('id') id: string) {
+    return this.service.delete(id);
   }
 
   @Patch('admin/:id')
@@ -87,13 +109,5 @@ export class EmojisController {
   @ApiOperation({ summary: 'Admin bật/tắt emoji' })
   toggle(@Param('id') id: string) {
     return this.service.toggle(id);
-  }
-
-  @Delete('admin/:id')
-  @Roles(RoleType.ADMIN)
-  @ResponseMessage(EMOJI_MESSAGES.DELETE_SUCCESS)
-  @ApiOperation({ summary: 'Admin xóa một emoji' })
-  delete(@Param('id') id: string) {
-    return this.service.delete(id);
   }
 }

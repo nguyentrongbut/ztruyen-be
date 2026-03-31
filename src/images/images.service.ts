@@ -35,13 +35,20 @@ export class ImagesService {
   ) {}
 
   async findImage(slug: string, res: Response) {
-    const image = await this.imageModel.findOne({ slug });
+    let query: Record<string, unknown>;
+
+    if (slug.startsWith('emoji-')) {
+      query = { slug: { $regex: `^${slug}` } };
+    } else {
+      query = { slug };
+    }
+
+    const image = await this.imageModel.findOne(query);
     if (!image) throw new NotFoundException(IMAGE_MESSAGES.NOT_FOUND);
 
     const stream = await this.uploadTelegramService.getFileStream(image.fileId);
 
     res.setHeader('Content-Type', 'image/webp');
-
     stream.pipe(res);
   }
 
@@ -52,8 +59,7 @@ export class ImagesService {
     }
 
     const finalUrl =
-      url ??
-      `${this.configService.get<string>('BACKEND_URL')}/image/${slug}`;
+      url ?? `${this.configService.get<string>('BACKEND_URL')}/image/${slug}`;
 
     const newImage = await this.imageModel.create({
       fileId,
@@ -114,7 +120,6 @@ export class ImagesService {
       slug: image.slug,
     };
   }
-
 
   async removeMany(ids: string[]) {
     validateMongoIds(ids);

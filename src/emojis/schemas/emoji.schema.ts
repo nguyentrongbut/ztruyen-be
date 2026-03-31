@@ -35,6 +35,9 @@ export class Emoji {
 
   @Prop({ default: true })
   isActive: boolean;
+
+  @Prop({ default: false })
+  isGif: boolean;
 }
 
 export const EmojiSchema = SchemaFactory.createForClass(Emoji);

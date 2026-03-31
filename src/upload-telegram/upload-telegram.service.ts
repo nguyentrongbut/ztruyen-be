@@ -60,7 +60,7 @@ export class UploadTelegramService {
     try {
       const metadata = await sharp(fileBuffer).metadata();
 
-      if (metadata.format === 'webp') {
+      if (metadata.format === 'webp' || metadata.format === 'gif') {
         return { buffer: fileBuffer, filename };
       }
 

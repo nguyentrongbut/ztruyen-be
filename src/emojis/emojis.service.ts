@@ -1,6 +1,10 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import aqp from 'api-query-params';
 
 import { Emoji, EmojiDocument } from './schemas/emoji.schema';
@@ -10,12 +14,14 @@ import { BulkDeleteEmojiDto } from './dto/bulk-delete-emoji.dto';
 import { removeVietnameseTones } from '../utils/removeVietnameseTones';
 import { EmojiType } from '../configs/enums/emoji.enum';
 import { EMOJI_MESSAGES } from '../configs/messages/emoji.message';
-import { EMOJI_CATEGORY_MESSAGES } from '../configs/messages/emoji-category.message';
+
+import { ImagesService } from '../images/images.service';
 
 @Injectable()
 export class EmojisService {
   constructor(
     @InjectModel(Emoji.name) private emojiModel: Model<EmojiDocument>,
+    private readonly imageService: ImagesService,
   ) {}
 
   async create(dto: CreateEmojiDto) {
@@ -31,6 +37,8 @@ export class EmojisService {
 
     return this.emojiModel.create({
       ...dto,
+      category: dto.category ? new Types.ObjectId(dto.category) : undefined,
+      image: dto.image ? new Types.ObjectId(dto.image) : undefined,
       name_unsigned: removeVietnameseTones(dto.name),
     });
   }
@@ -61,8 +69,8 @@ export class EmojisService {
         .find(finalFilter)
         .populate('image', 'url')
         .populate('category', 'name')
-        .select('name type image text category')
-        .sort((sort as any) || { createdAt: -1 })
+        .select('name type image text category isGif')
+        .sort((sort as any) || { createdAt: 1 })
         .skip(offset)
         .limit(safeLimit),
     ]);
@@ -122,14 +130,15 @@ export class EmojisService {
     const category = await this.emojiModel
       .findById(id)
       .populate('image', 'url');
-    if (!category)
-      throw new NotFoundException(EMOJI_MESSAGES.NOT_FOUND);
+    if (!category) throw new NotFoundException(EMOJI_MESSAGES.NOT_FOUND);
     return category;
   }
 
   async update(id: string, dto: UpdateEmojiDto) {
     const emoji = await this.emojiModel.findById(id);
     if (!emoji) throw new NotFoundException(EMOJI_MESSAGES.NOT_FOUND);
+
+    let oldImageId: string | null = null;
 
     if (dto.name) {
       const existed = await this.emojiModel.findOne({
@@ -141,12 +150,29 @@ export class EmojisService {
       emoji.name = dto.name;
       emoji.name_unsigned = removeVietnameseTones(dto.name);
     }
-    if (dto.type)     emoji.type     = dto.type;
-    if (dto.image)    emoji.image    = dto.image as any;
-    if (dto.text)     emoji.text     = dto.text;
-    if (dto.category) emoji.category = dto.category as any;
 
-    return emoji.save();
+    if (dto.type) emoji.type = dto.type;
+
+    if (dto.text) emoji.text = dto.text;
+
+    if (dto.category) {
+      emoji.category = new Types.ObjectId(dto.category);
+    }
+
+    if (dto.isGif !== undefined) emoji.isGif = dto.isGif;
+
+    if (dto.image && dto.image !== emoji.image?.toString()) {
+      oldImageId = emoji.image?.toString() || null;
+      emoji.image = new Types.ObjectId(dto.image);
+    }
+
+    await emoji.save();
+
+    if (oldImageId) {
+      await this.imageService.remove(oldImageId);
+    }
+
+    return emoji;
   }
 
   async toggle(id: string) {
@@ -162,11 +188,30 @@ export class EmojisService {
     if (!emoji) throw new NotFoundException(EMOJI_MESSAGES.NOT_FOUND);
 
     await this.emojiModel.deleteOne({ _id: id });
+
+    if (emoji.image) {
+      await this.imageService.remove(emoji.image.toString());
+    }
+
     return { deleted: true };
   }
 
   async bulkDelete(dto: BulkDeleteEmojiDto) {
-    const result = await this.emojiModel.deleteMany({ _id: { $in: dto.ids } });
-    return { deleted: true, count: result.deletedCount };
+    const emojis = await this.emojiModel
+      .find({ _id: { $in: dto.ids } })
+      .select('image')
+      .lean();
+
+    await this.emojiModel.deleteMany({ _id: { $in: dto.ids } });
+
+    const imageIds = emojis
+      .filter((e) => e.image)
+      .map((e) => e.image!.toString());
+
+    if (imageIds.length) {
+      await this.imageService.removeMany(imageIds);
+    }
+
+    return { deleted: true, count: emojis.length };
   }
 }

@@ -17,8 +17,12 @@ import {
 } from './schemas/emoji-category.schema';
 import { Emoji, EmojiSchema } from '../emojis/schemas/emoji.schema';
 
+// ** Module
+import { ImagesModule } from '../images/images.module';
+
 @Module({
   imports: [
+    ImagesModule,
     MongooseModule.forFeature([
       { name: EmojiCategory.name, schema: EmojiCategorySchema },
       { name: Emoji.name, schema: EmojiSchema },

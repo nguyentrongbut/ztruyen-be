@@ -13,8 +13,12 @@ import { MongooseModule } from '@nestjs/mongoose';
 // ** Schema
 import { Emoji, EmojiSchema } from './schemas/emoji.schema';
 
+// ** Module
+import { ImagesModule } from '../images/images.module';
+
 @Module({
   imports: [
+    ImagesModule,
     MongooseModule.forFeature([
       { name: Emoji.name, schema: EmojiSchema },
     ]),
