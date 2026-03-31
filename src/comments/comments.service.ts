@@ -101,6 +101,8 @@ export class CommentsService {
             ...dto,
             userId,
             content,
+            parent: dto.parent ? new Types.ObjectId(dto.parent) : undefined,
+            replyTo: dto.replyTo ? new Types.ObjectId(dto.replyTo) : undefined,
             comicSlug: parent.comicSlug,
             comicName: parent.comicName,
             comicName_unsigned: parent.comicName_unsigned,
@@ -196,13 +198,12 @@ export class CommentsService {
     };
 
     if (userId) {
-      const commentIds = result.map((c) => c._id.toString());
-      const likes = await this.likeModel
-        .find({
-          commentId: { $in: commentIds },
-          userId: new Types.ObjectId(userId),
-        })
-        .select('commentId');
+      const commentObjectIds = result.map((c) => c._id);
+
+      const likes = await this.likeModel.find({
+        commentId: { $in: commentObjectIds },
+        userId: new Types.ObjectId(userId),
+      });
 
       const likedSet = new Set(likes.map((l) => l.commentId.toString()));
 
@@ -218,54 +219,6 @@ export class CommentsService {
     return { meta, result };
   }
 
-  async like(commentId: string, userId: string) {
-    const session = await this.connection.startSession();
-    session.startTransaction();
-
-    try {
-      const exist = await this.likeModel.findOne({
-        commentId,
-        userId,
-      });
-
-      if (exist) {
-        await this.likeModel.deleteOne({ _id: exist._id }, { session });
-        await this.commentModel.updateOne(
-          { _id: commentId },
-          { $inc: { likeCount: -1 } },
-          { session },
-        );
-        await session.commitTransaction();
-        return { liked: false };
-      }
-
-      await this.likeModel.create([{ commentId, userId }], { session });
-
-      await this.commentModel.updateOne(
-        { _id: commentId },
-        { $inc: { likeCount: 1 } },
-        { session },
-      );
-
-      await session.commitTransaction();
-      return { liked: true };
-    } catch (e) {
-      await session.abortTransaction();
-      throw e;
-    } finally {
-      session.endSession();
-    }
-  }
-
-  async report(commentId: string, userId: string, reason: string) {
-    try {
-      await this.reportModel.create({ commentId, userId, reason });
-    } catch (e) {
-      if (e.code === 11000) throw new BadRequestException('Already reported');
-      throw e;
-    }
-  }
-
   async getReplies(
     parentId: string,
     page: number,
@@ -279,7 +232,7 @@ export class CommentsService {
     const safeLimit = Math.min(100, Math.max(1, limit || 10));
     const offset = (safePage - 1) * safeLimit;
 
-    const filter = { parent: parentId };
+    const filter = { parent: new Types.ObjectId(parentId) };
 
     const [totalItems, result] = await Promise.all([
       this.commentModel.countDocuments(filter),
@@ -314,9 +267,13 @@ export class CommentsService {
     };
 
     if (userId) {
-      const ids = result.map((r) => r._id.toString());
+      const commentObjectIds = result.map((r) => r._id);
+
       const likes = await this.likeModel
-        .find({ commentId: { $in: ids }, userId: new Types.ObjectId(userId) })
+        .find({
+          commentId: { $in: commentObjectIds },
+          userId: new Types.ObjectId(userId),
+        })
         .select('commentId');
 
       const likedSet = new Set(likes.map((l) => l.commentId.toString()));
@@ -333,12 +290,77 @@ export class CommentsService {
     return { meta, result };
   }
 
-  async delete(id: string, userId: string) {
+  async like(commentId: string, userId: string) {
     const session = await this.connection.startSession();
     session.startTransaction();
 
     try {
-      const comment = await this.commentModel.findById(id);
+      const commentObjectId = new Types.ObjectId(commentId);
+      const userObjectId = new Types.ObjectId(userId);
+
+      const exist = await this.likeModel.findOne({
+        commentId: commentObjectId,
+        userId: userObjectId,
+      });
+
+      if (exist) {
+        await this.likeModel.deleteOne({ _id: exist._id }, { session });
+        await this.commentModel.updateOne(
+          { _id: commentId },
+          { $inc: { likeCount: -1 } },
+          { session },
+        );
+        await session.commitTransaction();
+        return { liked: false };
+      }
+
+      await this.likeModel.create(
+        [
+          {
+            commentId: commentObjectId,
+            userId: userObjectId,
+          },
+        ],
+        { session },
+      );
+
+      await this.commentModel.updateOne(
+        { _id: commentId },
+        { $inc: { likeCount: 1 } },
+        { session },
+      );
+
+      await session.commitTransaction();
+      return { liked: true };
+    } catch (e) {
+      await session.abortTransaction();
+      throw e;
+    } finally {
+      session.endSession();
+    }
+  }
+
+  async report(commentId: string, userId: string, reason: string) {
+    try {
+      await this.reportModel.create({
+        commentId: new Types.ObjectId(commentId),
+        userId: new Types.ObjectId(userId),
+        reason,
+      });
+    } catch (e) {
+      if (e.code === 11000) throw new BadRequestException('Already reported');
+      throw e;
+    }
+  }
+
+  async delete(id: string, userId: string) {
+    const session = await this.connection.startSession();
+    session.startTransaction();
+
+    const commentObjectId = new Types.ObjectId(id);
+
+    try {
+      const comment = await this.commentModel.findById(commentObjectId);
 
       if (!comment) {
         throw new NotFoundException('Bình luận không tồn tại');
@@ -349,12 +371,15 @@ export class CommentsService {
       }
 
       const replies = await this.commentModel
-        .find({ parent: id })
+        .find({ parent: commentObjectId })
         .select('_id');
       const replyIds = replies.map((r) => r._id);
 
-      await this.commentModel.deleteOne({ _id: id }, { session });
-      await this.commentModel.deleteMany({ parent: id }, { session });
+      await this.commentModel.deleteOne({ _id: commentObjectId }, { session });
+      await this.commentModel.deleteMany(
+        { parent: commentObjectId },
+        { session },
+      );
 
       if (comment.parent) {
         await this.commentModel.updateOne(
@@ -365,7 +390,7 @@ export class CommentsService {
       }
 
       await this.likeModel.deleteMany(
-        { commentId: { $in: [id, ...replyIds] } },
+        { commentId: { $in: [commentObjectId, ...replyIds] } },
         { session },
       );
 
@@ -430,17 +455,22 @@ export class CommentsService {
     const session = await this.connection.startSession();
     session.startTransaction();
 
+    const commentObjectId = new Types.ObjectId(id);
+
     try {
-      const comment = await this.commentModel.findById(id);
+      const comment = await this.commentModel.findById(commentObjectId);
       if (!comment) throw new NotFoundException('Comment không tồn tại');
 
       const replies = await this.commentModel
-        .find({ parent: id })
+        .find({ parent: commentObjectId })
         .select('_id');
       const replyIds = replies.map((r) => r._id);
 
-      await this.commentModel.deleteOne({ _id: id }, { session });
-      await this.commentModel.deleteMany({ parent: id }, { session });
+      await this.commentModel.deleteOne({ _id: commentObjectId }, { session });
+      await this.commentModel.deleteMany(
+        { parent: commentObjectId },
+        { session },
+      );
 
       // Cập nhật replyCount của parent nếu comment bị xóa là reply
       if (comment.parent) {
@@ -452,12 +482,12 @@ export class CommentsService {
       }
 
       await this.likeModel.deleteMany(
-        { commentId: { $in: [id, ...replyIds] } },
+        { commentId: { $in: [commentObjectId, ...replyIds] } },
         { session },
       );
 
       await this.reportModel.deleteMany(
-        { commentId: { $in: [id, ...replyIds] } },
+        { commentId: { $in: [commentObjectId, ...replyIds] } },
         { session },
       );
 
@@ -476,25 +506,30 @@ export class CommentsService {
     session.startTransaction();
 
     try {
+      const objectIds = ids.map((id) => new Types.ObjectId(id));
+
       const comments = await this.commentModel
-        .find({ _id: { $in: ids } })
+        .find({ _id: { $in: objectIds } })
         .select('_id parent');
 
       if (!comments.length)
         throw new NotFoundException('Không tìm thấy comment nào');
 
-      const foundIds = comments.map((c) => c._id.toString());
+      const foundObjectIds = comments.map((c) => c._id as Types.ObjectId);
 
       const replies = await this.commentModel
-        .find({ parent: { $in: foundIds } })
+        .find({ parent: { $in: foundObjectIds } })
         .select('_id');
-      const replyIds = replies.map((r) => r._id);
 
-      const allIds = [...foundIds, ...replyIds.map((id) => id.toString())];
+      const replyObjectIds = replies.map((r) => r._id as Types.ObjectId);
 
-      await this.commentModel.deleteMany({ _id: { $in: allIds } }, { session });
+      const allObjectIds = [...foundObjectIds, ...replyObjectIds];
 
-      // Cập nhật replyCount cho các parent của những comment là reply
+      await this.commentModel.deleteMany(
+        { _id: { $in: allObjectIds } },
+        { session },
+      );
+
       const replyComments = comments.filter((c) => c.parent);
       if (replyComments.length) {
         const bulkOps = replyComments.map((c) => ({
@@ -507,17 +542,17 @@ export class CommentsService {
       }
 
       await this.likeModel.deleteMany(
-        { commentId: { $in: allIds } },
+        { commentId: { $in: allObjectIds } },
         { session },
       );
 
       await this.reportModel.deleteMany(
-        { commentId: { $in: allIds } },
+        { commentId: { $in: allObjectIds } },
         { session },
       );
 
       await session.commitTransaction();
-      return { deleted: true, count: allIds.length };
+      return { deleted: true, count: allObjectIds.length };
     } catch (e) {
       await session.abortTransaction();
       throw e;

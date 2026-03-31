@@ -57,6 +57,10 @@ export class EmojisService {
       delete filter.search;
     }
 
+    if (filter.category) {
+      filter.category = new Types.ObjectId(filter.category);
+    }
+
     const finalFilter = { ...filter, isActive: true };
 
     const safePage = Math.max(1, page || 1);

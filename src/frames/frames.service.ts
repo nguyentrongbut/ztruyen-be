@@ -52,6 +52,7 @@ export class FramesService {
 
     const newFrame = await this.frameModel.create({
       ...createFrameDto,
+      image: createFrameDto.image ? new Types.ObjectId(createFrameDto.image) : undefined,
       name_unsigned: removeVietnameseTones(name),
     });
 

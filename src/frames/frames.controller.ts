@@ -109,16 +109,6 @@ Sắp xếp kết quả:
     return this.framesService.update(id, updateFrameDto);
   }
 
-  @Delete('delete/:id')
-  @Roles(RoleType.ADMIN)
-  @ResponseMessage(FRAMES_MESSAGES.DELETE_SUCCESS)
-  @ApiOperation({
-    summary: 'Xoá khung avatar (Chỉ Admin có quyền)',
-  })
-  remove(@Param('id') id: string) {
-    return this.framesService.remove(id);
-  }
-
   @Delete('delete-multi')
   @Roles(RoleType.ADMIN)
   @ResponseMessage(FRAMES_MESSAGES.DELETE_MULTI_SUCCESS)
@@ -127,5 +117,15 @@ Sắp xếp kết quả:
   })
   removeMulti(@Body() dto: RestoreAndDeleteMultiDto) {
     return this.framesService.removeMulti(dto.ids);
+  }
+
+  @Delete('delete/:id')
+  @Roles(RoleType.ADMIN)
+  @ResponseMessage(FRAMES_MESSAGES.DELETE_SUCCESS)
+  @ApiOperation({
+    summary: 'Xoá khung avatar (Chỉ Admin có quyền)',
+  })
+  remove(@Param('id') id: string) {
+    return this.framesService.remove(id);
   }
 }
