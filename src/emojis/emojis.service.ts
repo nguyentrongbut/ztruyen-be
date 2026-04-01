@@ -25,7 +25,11 @@ export class EmojisService {
   ) {}
 
   async create(dto: CreateEmojiDto) {
-    const existed = await this.emojiModel.findOne({ name: dto.name });
+    const name = dto.name.trim();
+
+    const existed = await this.emojiModel.findOne({
+      name: { $regex: `^${name}$`, $options: 'i' },
+    });
     if (existed) throw new BadRequestException(EMOJI_MESSAGES.ALREADY_EXISTS);
 
     if (dto.type === EmojiType.IMAGE && !dto.image) {
@@ -37,6 +41,7 @@ export class EmojisService {
 
     return this.emojiModel.create({
       ...dto,
+      name,
       category: dto.category ? new Types.ObjectId(dto.category) : undefined,
       image: dto.image ? new Types.ObjectId(dto.image) : undefined,
       name_unsigned: removeVietnameseTones(dto.name),
@@ -145,14 +150,45 @@ export class EmojisService {
     let oldImageId: string | null = null;
 
     if (dto.name) {
+      const name = dto.name.trim();
+
       const existed = await this.emojiModel.findOne({
-        name: dto.name,
-        _id: { $ne: id },
+        name: { $regex: `^${name}$`, $options: 'i' },
+        _id: { $ne: new Types.ObjectId(id) },
       });
       if (existed) throw new BadRequestException(EMOJI_MESSAGES.ALREADY_EXISTS);
 
-      emoji.name = dto.name;
-      emoji.name_unsigned = removeVietnameseTones(dto.name);
+      emoji.name = name;
+      emoji.name_unsigned = removeVietnameseTones(name);
+
+      if (emoji.image) {
+        const image = await this.imageService.findById(emoji.image.toString());
+        if (image) {
+          const isGif = dto.isGif !== undefined ? dto.isGif : emoji.isGif;
+
+          // delete all -gif and space in slug
+          const cleanSlug = image.slug
+            .replace(/-gif/g, '') // delete -gif
+            .replace(/--+/g, '-') // delete --
+            .replace(/-$/, ''); // delete - ''
+
+          const timestamp = cleanSlug.match(/-(\d+)$/)?.[1];
+
+          if (timestamp) {
+            const baseName = (dto.name ?? emoji.name)
+              .replace(/\s*gif\s*/gi, '') // delete "gif" in name
+              .trim()
+              .replace(/\s+/g, '-')
+              .toLowerCase();
+
+            const newSlug = isGif
+              ? `emoji-${baseName}-gif-${timestamp}`
+              : `emoji-${baseName}-${timestamp}`;
+
+            await this.imageService.updateSlug(image._id.toString(), newSlug);
+          }
+        }
+      }
     }
 
     if (dto.type) emoji.type = dto.type;

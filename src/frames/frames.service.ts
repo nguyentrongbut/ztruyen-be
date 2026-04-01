@@ -44,14 +44,17 @@ export class FramesService {
 
   // CRUD
   async create(createFrameDto: CreateFrameDto) {
-    const { name } = createFrameDto;
+    const name = createFrameDto.name.trim();
 
-    if (await this.frameModel.findOne({ name })) {
+    if (await this.frameModel.findOne({
+      name: { $regex: `^${name}$`, $options: 'i' }
+    })) {
       throw new BadRequestException(FRAMES_MESSAGES.NAME_EXISTED);
     }
 
     const newFrame = await this.frameModel.create({
       ...createFrameDto,
+      name,
       image: createFrameDto.image ? new Types.ObjectId(createFrameDto.image) : undefined,
       name_unsigned: removeVietnameseTones(name),
     });
@@ -134,17 +137,24 @@ export class FramesService {
 
     const updateData: Partial<IFrame> = {};
 
+    if (updateFrameDto.name !== undefined) {
+      const name = updateFrameDto.name.trim();
+
+      const existed = await this.frameModel.findOne({
+        name: { $regex: `^${name}$`, $options: 'i' },
+        _id: { $ne: new Types.ObjectId(id) },
+      });
+      if (existed) throw new BadRequestException(FRAMES_MESSAGES.NAME_EXISTED);
+
+      updateData.name = name;
+      updateData.name_unsigned = removeVietnameseTones(name);
+    }
+
     if (
       updateFrameDto.image &&
       updateFrameDto.image !== currentFrame.image?.toString()
     ) {
       updateData.image = new Types.ObjectId(updateFrameDto.image);
-    }
-
-    if (updateFrameDto.name !== undefined) {
-      updateData.name = updateFrameDto.name;
-
-      updateData.name_unsigned = removeVietnameseTones(updateFrameDto.name)
     }
 
     const result = await this.frameModel.updateOne(

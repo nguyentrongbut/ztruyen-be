@@ -96,21 +96,28 @@ export class UsersService {
     return this.userModel.findOne({ refreshToken });
   }
 
+  // register
   async register(user: RegisterUserDto) {
     const { email, password, name } = user;
+    const trimmedName = name.trim();
 
-    // check email exists
     if (await this.userModel.findOne({ email })) {
       throw new BadRequestException(USERS_MESSAGES.EMAIL_EXISTED);
     }
 
-    // check name exists
-    if (await this.userModel.findOne({ name })) {
+    if (await this.userModel.findOne({
+      name: { $regex: `^${trimmedName}$`, $options: 'i' }
+    })) {
       throw new BadRequestException(USERS_MESSAGES.NAME_EXISTED);
     }
 
     const hash = this.getHashPassword(password);
-    return this.userModel.create({ ...user, password: hash, name_unsigned: removeVietnameseTones(name) });
+    return this.userModel.create({
+      ...user,
+      name: trimmedName,
+      password: hash,
+      name_unsigned: removeVietnameseTones(trimmedName)
+    });
   }
 
   // forgot password
@@ -206,18 +213,12 @@ export class UsersService {
 
     const updateData: Partial<IUser> = {};
 
-    if (
-      updateProfileDto.name &&
-      updateProfileDto.name !== currentUser.name
-    ) {
+    if (updateProfileDto.name && updateProfileDto.name !== currentUser.name) {
       const nameExists = await this.userModel.exists({
-        name: updateProfileDto.name,
+        name: { $regex: `^${updateProfileDto.name.trim()}$`, $options: 'i' },
         _id: { $ne: user._id },
       });
-
-      if (nameExists) {
-        throw new BadRequestException(USERS_MESSAGES.NAME_EXISTED);
-      }
+      if (nameExists) throw new BadRequestException(USERS_MESSAGES.NAME_EXISTED);
     }
 
     if (
@@ -237,9 +238,9 @@ export class UsersService {
     const { name, age, gender, bio, birthday, avatar_frame } = updateProfileDto;
 
     if (name !== undefined) {
-      updateData.name = name;
-
-      updateData.name_unsigned = removeVietnameseTones(name)
+      const trimmedName = name.trim();
+      updateData.name = trimmedName;
+      updateData.name_unsigned = removeVietnameseTones(trimmedName);
     }
 
     if (avatar_frame !== undefined) {
@@ -491,18 +492,12 @@ export class UsersService {
 
     const updateData: Partial<IUser> = {};
 
-    if (
-      updateUserDto.name &&
-      updateUserDto.name !== currentUser.name
-    ) {
+    if (updateUserDto.name && updateUserDto.name !== currentUser.name) {
       const nameExists = await this.userModel.exists({
-        name: updateUserDto.name,
+        name: { $regex: `^${updateUserDto.name.trim()}$`, $options: 'i' },
         _id: { $ne: id },
       });
-
-      if (nameExists) {
-        throw new BadRequestException(USERS_MESSAGES.NAME_EXISTED);
-      }
+      if (nameExists) throw new BadRequestException(USERS_MESSAGES.NAME_EXISTED);
     }
 
     if (
@@ -523,8 +518,9 @@ export class UsersService {
       updateUserDto;
 
     if (name !== undefined) {
-      updateData.name = name;
-      updateData.name_unsigned = removeVietnameseTones(name)
+      const trimmedName = name.trim();
+      updateData.name = trimmedName;
+      updateData.name_unsigned = removeVietnameseTones(trimmedName);
     }
 
     if (avatar_frame !== undefined) {

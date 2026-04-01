@@ -27,11 +27,12 @@ export class EmojiCategoriesService {
   ) {}
 
   async create(dto: CreateEmojiCategoryDto) {
+    const name = dto.name.trim();
+
     const existed = await this.categoryModel.findOne({
-      name_unsigned: removeVietnameseTones(dto.name),
+      name: { $regex: `^${name}$`, $options: 'i' },
     });
-    if (existed)
-      throw new BadRequestException(EMOJI_CATEGORY_MESSAGES.ALREADY_EXISTS);
+    if (existed) throw new BadRequestException(EMOJI_CATEGORY_MESSAGES.ALREADY_EXISTS);
 
     const maxOrder = await this.categoryModel
       .findOne()
@@ -40,6 +41,7 @@ export class EmojiCategoriesService {
 
     return this.categoryModel.create({
       ...dto,
+      name,
       image: dto.image ? new Types.ObjectId(dto.image) : undefined,
       name_unsigned: removeVietnameseTones(dto.name),
       order: dto.order ?? (maxOrder ? maxOrder.order + 1 : 0),
@@ -104,12 +106,13 @@ export class EmojiCategoriesService {
     let oldImageId: string | null = null;
 
     if (dto.name) {
+      const name = dto.name.trim();
+
       const existed = await this.categoryModel.findOne({
-        name_unsigned: removeVietnameseTones(dto.name),
+        name: { $regex: `^${name}$`, $options: 'i' },
         _id: { $ne: id },
       });
-      if (existed)
-        throw new BadRequestException(EMOJI_CATEGORY_MESSAGES.ALREADY_EXISTS);
+      if (existed) throw new BadRequestException(EMOJI_CATEGORY_MESSAGES.ALREADY_EXISTS);
 
       category.name = dto.name;
       category.name_unsigned = removeVietnameseTones(dto.name);

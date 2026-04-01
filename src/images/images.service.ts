@@ -142,4 +142,12 @@ export class ImagesService {
       ids: images.map((img) => img._id),
     };
   }
+
+  async findById(id: string) {
+    return this.imageModel.findById(id);
+  }
+
+  async updateSlug(id: string, newSlug: string) {
+    return this.imageModel.findByIdAndUpdate(id, { slug: newSlug });
+  }
 }
