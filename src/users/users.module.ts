@@ -13,10 +13,12 @@ import { User, UserSchema } from './schemas/user.schema';
 
 // ** Modules
 import { ImagesModule } from '../images/images.module';
+import { FirebaseModule } from '../firebase/firebase.module';
 
 @Module({
   imports: [
     ImagesModule,
+    FirebaseModule,
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
   controllers: [UsersController],

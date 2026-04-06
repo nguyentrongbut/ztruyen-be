@@ -78,6 +78,9 @@ export class User {
   @Prop()
   refreshToken: string;
 
+  @Prop({ type: [String], default: [] })
+  fcmTokens: string[];
+
   @Prop()
   deletedAt: Date;
 

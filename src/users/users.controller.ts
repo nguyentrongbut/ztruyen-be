@@ -57,6 +57,7 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
+import { FcmTokenDto } from './dto/fcm-token.dto';
 
 @ApiTags('user')
 @ApiBearerAuth('access-token')
@@ -379,5 +380,28 @@ Sắp xếp kết quả:
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     );
     res.end(buffer);
+  }
+
+  // Firebase Cloud Messaging (FCM) token management
+  @Post('fcm-token')
+  @ResponseMessage(USERS_MESSAGES.UPDATE_FCM_TOKEN_SUCCESS)
+  saveFcmToken(@Body() dto: FcmTokenDto, @User() user: IUser) {
+    return this.usersService.saveFcmToken(user._id, dto.token);
+  }
+
+  @Patch('fcm-token/remove')
+  @ResponseMessage(USERS_MESSAGES.DELETE_FCM_TOKEN_SUCCESS)
+  removeFcmToken(@Body() dto: FcmTokenDto, @User() user: IUser) {
+    return this.usersService.removeFcmToken(user._id, dto.token);
+  }
+
+  @Post('fcm-token/subscribe-topic')
+  subscribeToTopic(@Body() dto: { token: string; topic: string }) {
+    return this.usersService.subscribeToTopic(dto.token, dto.topic);
+  }
+
+  @Post('fcm-token/unsubscribe-topic')
+  unsubscribeFromTopic(@Body() dto: { token: string; topic: string }) {
+    return this.usersService.unsubscribeFromTopic(dto.token, dto.topic);
   }
 }

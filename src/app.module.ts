@@ -23,6 +23,9 @@ import { FavoritesModule } from './favorites/favorites.module';
 import { CommentsModule } from './comments/comments.module';
 import { EmojisModule } from './emojis/emojis.module';
 import { EmojiCategoriesModule } from './emoji-categories/emoji-categories.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { FirebaseModule } from './firebase/firebase.module';
+import { AnnouncementsModule } from './announcements/announcements.module';
 
 @Module({
   imports: [
@@ -50,6 +53,9 @@ import { EmojiCategoriesModule } from './emoji-categories/emoji-categories.modul
     CommentsModule,
     EmojisModule,
     EmojiCategoriesModule,
+    NotificationsModule,
+    FirebaseModule,
+    AnnouncementsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

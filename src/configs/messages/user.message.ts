@@ -35,4 +35,8 @@ export const USERS_MESSAGES = {
   INVALID_OR_EXPIRED_TOKEN: 'Mã đặt lại mật khẩu không hợp lệ hoặc đã hết hạn!',
   USER_NOT_FOUND: 'Không tìm thấy người dùng',
   INVALID_OLD_PASSWORD: 'Mật khẩu cũ không chính xác',
+
+  // --- FIREBASE ---
+  UPDATE_FCM_TOKEN_SUCCESS: 'Cập nhật FCM token thành công!',
+  DELETE_FCM_TOKEN_SUCCESS: 'Xóa FCM token thành công!',
 } as const;

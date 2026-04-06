@@ -57,6 +57,7 @@ import { ProviderType, RoleType } from '../configs/enums/user.enum';
 
 // ** Services
 import { ImagesService } from '../images/images.service';
+import { FirebaseService } from '../firebase/firebase.service';
 
 // ** Dayjs
 import dayjs from 'dayjs';
@@ -71,6 +72,7 @@ export class UsersService {
     @InjectModel(User.name) private userModel: SoftDeleteModel<UserDocument>,
     private readonly configService: ConfigService,
     private readonly imageService: ImagesService,
+    private readonly firebaseService: FirebaseService,
   ) {
     this.emailExpire = this.configService.get<string>(
       'EMAIL_RESET_PASSWORD_EXPIRE',
@@ -891,5 +893,45 @@ export class UsersService {
     ]);
 
     return (await workbook.xlsx.writeBuffer()) as unknown as Buffer;
+  }
+
+  async saveFcmToken(userId: string, token: string): Promise<void> {
+    if (!token?.trim()) throw new BadRequestException('Token không hợp lệ');
+
+    const user = await this.userModel.findById(userId).select('fcmTokens');
+    const MAX_TOKENS = 10;
+
+    if (user?.fcmTokens?.length >= MAX_TOKENS) {
+      await this.userModel.updateOne(
+        { _id: userId },
+        {
+          $pop: { fcmTokens: -1 },
+          $addToSet: { fcmTokens: token },
+        },
+      );
+      return;
+    }
+
+    await this.userModel.updateOne(
+      { _id: userId },
+      { $addToSet: { fcmTokens: token } },
+    );
+  }
+
+  async removeFcmToken(userId: string, token: string): Promise<void> {
+    if (!token?.trim()) throw new BadRequestException('Token không hợp lệ');
+
+    await this.userModel.updateOne(
+      { _id: userId },
+      { $pull: { fcmTokens: token } },
+    );
+  }
+
+  async subscribeToTopic(token: string, topic: string) {
+    await this.firebaseService.subscribeToTopic(token, topic);
+  }
+
+  async unsubscribeFromTopic(token: string, topic: string) {
+    await this.firebaseService.unsubscribeFromTopic(token, topic);
   }
 }

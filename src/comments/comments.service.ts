@@ -1,13 +1,18 @@
+// ** NestJS
 import {
   Injectable,
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+
+// ** Mongoose
 import { Model, Types, Connection } from 'mongoose';
 import aqp from 'api-query-params';
 
+// ** Schemas
 import { Comment, CommentDocument } from './schemas/comment.schema';
 import {
   CommentLike,
@@ -17,23 +22,44 @@ import {
   CommentReport,
   CommentReportDocument,
 } from './schemas/comment-report.schema';
+import { User, UserDocument } from '../users/schemas/user.schema';
+
+// ** Utils
 import { checkSpam } from '../utils/anti-spam';
 import { filterBadWords } from '../utils/filter-words';
 import { removeVietnameseTones } from '../utils/removeVietnameseTones';
+
+// ** DTOs
 import { CreateCommentDto } from './dto/create-comment.dto';
-import { ReportStatus } from '../configs/enums/comment.enum';
 import { CreateReplyDto } from './dto/create-reply.dto';
+
+// ** Enums
+import { ReportStatus } from '../configs/enums/comment.enum';
+
+// ** Services
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class CommentsService {
+  private readonly logger = new Logger(CommentsService.name);
+
   constructor(
-    @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
+    @InjectModel(Comment.name)
+    private commentModel: Model<CommentDocument>,
     @InjectModel(CommentLike.name)
     private likeModel: Model<CommentLikeDocument>,
     @InjectModel(CommentReport.name)
     private reportModel: Model<CommentReportDocument>,
-    @InjectConnection() private connection: Connection,
+    @InjectModel(User.name)
+    private userModel: Model<UserDocument>,
+    @InjectConnection()
+    private connection: Connection,
+    private readonly notificationsService: NotificationsService,
   ) {}
+
+  // ─────────────────────────────────────────────────────────────
+  // Create comment
+  // ─────────────────────────────────────────────────────────────
 
   async create(dto: CreateCommentDto, userId: string) {
     checkSpam(userId);
@@ -79,56 +105,175 @@ export class CommentsService {
     }
   }
 
-  async createReply(dto: CreateReplyDto, userId: string) {
-    checkSpam(userId);
+  // ─────────────────────────────────────────────────────────────
+  // Create reply
+  // ─────────────────────────────────────────────────────────────
 
-    const session = await this.connection.startSession();
-    session.startTransaction();
+  //
+
+  async createReply(dto: CreateReplyDto, userId: string) {
+    const { parent: parentId, content } = dto;
+
+    if (!Types.ObjectId.isValid(parentId)) {
+      throw new BadRequestException('Invalid parentId');
+    }
+
+    // 1. tìm comment cha
+    const parent = await this.commentModel.findById(parentId);
+    if (!parent) {
+      throw new NotFoundException('Parent comment not found');
+    }
+
+    // 2. tìm root comment
+    let root = parent;
+    if (parent.parent) {
+      root = await this.commentModel.findById(parent.parent);
+      if (!root) {
+        throw new NotFoundException('Root comment not found');
+      }
+    }
+
+    const rootOwnerId = root.userId?.toString();
+    const parentOwnerId = parent.userId?.toString();
+
+    // 3. tạo reply
+    const newReply = await this.commentModel.create({
+      userId: new Types.ObjectId(userId),
+      content,
+
+      //  LUÔN ép ObjectId
+      parent: new Types.ObjectId(parentId),
+
+      // replyTo là userId
+      replyTo:
+        dto.replyTo && Types.ObjectId.isValid(dto.replyTo)
+          ? new Types.ObjectId(dto.replyTo)
+          : null,
+
+      comicSlug: parent.comicSlug,
+      comicName: parent.comicName,
+      comicName_unsigned: parent.comicName_unsigned,
+      chapterId: parent.chapterId,
+      chapterName: parent.chapterName,
+      page: parent.page,
+    });
+
+    // 4. tăng replyCount
+    await this.commentModel.updateOne(
+      { _id: parent._id },
+      { $inc: { replyCount: 1 } },
+    );
+
+    // 5. xác định người nhận
+    let recipientId: string | null = null;
+
+    if (dto.replyTo && Types.ObjectId.isValid(dto.replyTo)) {
+      recipientId = dto.replyTo;
+    } else {
+      recipientId = rootOwnerId;
+    }
+
+    // 6. block self notify
+    if (!recipientId || recipientId === userId.toString()) {
+      return newReply;
+    }
+
+    // 7. gửi notification
+    await this.sendReplyNotification({
+      senderId: userId,
+      recipientId,
+      parent,
+      replyId: newReply._id.toString(),
+      commentId: parentId,
+      content,
+    });
+
+    return newReply;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Notification helpers
+  // ─────────────────────────────────────────────────────────────
+
+  private async sendReplyNotification(params: {
+    senderId: string;
+    recipientId: string;
+    parent: any;
+    replyId: string;
+    commentId: string;
+    content: string;
+  }) {
+    const { senderId, recipientId, parent, replyId, commentId, content } =
+      params;
+
+    // double guard
+    if (!recipientId || recipientId === senderId) {
+      return;
+    }
+
+    // sender info
+    const sender = await this.userModel
+      .findById(senderId)
+      .select('name avatar')
+      .populate<{ avatar: { url: string } }>('avatar', 'url')
+      .lean();
+
+    if (!sender) {
+      return;
+    }
 
     try {
-      const parent = await this.commentModel
-        .findById(dto.parent)
-        .select(
-          'comicSlug comicName comicName_unsigned chapterId chapterName page',
-        );
-      if (!parent) throw new NotFoundException();
-
-      const content = filterBadWords(dto.content);
-
-      const comment = await this.commentModel.create(
-        [
-          {
-            ...dto,
-            userId,
-            content,
-            parent: dto.parent ? new Types.ObjectId(dto.parent) : undefined,
-            replyTo: dto.replyTo ? new Types.ObjectId(dto.replyTo) : undefined,
-            comicSlug: parent.comicSlug,
-            comicName: parent.comicName,
-            comicName_unsigned: parent.comicName_unsigned,
-            chapterId: parent.chapterId,
-            chapterName: parent.chapterName,
-            page: parent.page,
-          },
-        ],
-        { session },
-      );
-
-      await this.commentModel.updateOne(
-        { _id: dto.parent },
-        { $inc: { replyCount: 1 } },
-        { session },
-      );
-
-      await session.commitTransaction();
-      return comment[0];
-    } catch (e) {
-      await session.abortTransaction();
-      throw e;
-    } finally {
-      session.endSession();
+      await this.notificationsService.notifyReply({
+        recipientId,
+        senderId,
+        senderName: sender.name,
+        senderAvatar: sender.avatar?.url,
+        commentId,
+        replyId,
+        comicName: parent.comicName,
+        comicSlug: parent.comicSlug,
+        chapterId: parent.chapterId,
+        contentPreview: content,
+      });
+    } catch (err) {
+      this.logger.error('notifyReply failed', err);
     }
   }
+
+  private async sendLikeNotification(commentId: string, senderId: string) {
+    const comment = await this.commentModel
+      .findById(commentId)
+      .select('userId content comicSlug chapterId')
+      .lean();
+
+    if (!comment) return;
+
+    const recipientId = comment.userId.toString();
+    if (recipientId === senderId) return;
+
+    const sender = await this.userModel
+      .findById(senderId)
+      .select('name avatar')
+      .populate<{ avatar: { url: string } }>('avatar', 'url');
+
+    if (!sender) return;
+
+    await this.notificationsService.notifyLike({
+      recipientId,
+      senderId,
+      senderName: sender.name,
+      senderAvatar: sender.avatar?.url,
+      commentId,
+      comicName: comment.comicName,
+      comicSlug: comment.comicSlug,
+      chapterId: comment.chapterId?.toString(),
+      contentPreview: comment.content,
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Get comments
+  // ─────────────────────────────────────────────────────────────
 
   async getComments(page: number, limit: number, qs: string, userId?: string) {
     const { filter, sort } = aqp(qs);
@@ -199,14 +344,11 @@ export class CommentsService {
 
     if (userId) {
       const commentObjectIds = result.map((c) => c._id);
-
       const likes = await this.likeModel.find({
         commentId: { $in: commentObjectIds },
         userId: new Types.ObjectId(userId),
       });
-
       const likedSet = new Set(likes.map((l) => l.commentId.toString()));
-
       return {
         meta,
         result: result.map((c) => ({
@@ -218,6 +360,10 @@ export class CommentsService {
 
     return { meta, result };
   }
+
+  // ─────────────────────────────────────────────────────────────
+  // Get replies
+  // ─────────────────────────────────────────────────────────────
 
   async getReplies(
     parentId: string,
@@ -268,16 +414,13 @@ export class CommentsService {
 
     if (userId) {
       const commentObjectIds = result.map((r) => r._id);
-
       const likes = await this.likeModel
         .find({
           commentId: { $in: commentObjectIds },
           userId: new Types.ObjectId(userId),
         })
         .select('commentId');
-
       const likedSet = new Set(likes.map((l) => l.commentId.toString()));
-
       return {
         meta,
         result: result.map((r) => ({
@@ -289,6 +432,10 @@ export class CommentsService {
 
     return { meta, result };
   }
+
+  // ─────────────────────────────────────────────────────────────
+  // Like
+  // ─────────────────────────────────────────────────────────────
 
   async like(commentId: string, userId: string) {
     const session = await this.connection.startSession();
@@ -315,15 +462,9 @@ export class CommentsService {
       }
 
       await this.likeModel.create(
-        [
-          {
-            commentId: commentObjectId,
-            userId: userObjectId,
-          },
-        ],
+        [{ commentId: commentObjectId, userId: userObjectId }],
         { session },
       );
-
       await this.commentModel.updateOne(
         { _id: commentId },
         { $inc: { likeCount: 1 } },
@@ -331,6 +472,12 @@ export class CommentsService {
       );
 
       await session.commitTransaction();
+
+      // ── Gửi notification bất đồng bộ — không block response ──
+      this.sendLikeNotification(commentId, userId).catch((err) =>
+        this.logger.error('Send like notification failed', err),
+      );
+
       return { liked: true };
     } catch (e) {
       await session.abortTransaction();
@@ -339,6 +486,10 @@ export class CommentsService {
       session.endSession();
     }
   }
+
+  // ─────────────────────────────────────────────────────────────
+  // Report
+  // ─────────────────────────────────────────────────────────────
 
   async report(commentId: string, userId: string, reason: string) {
     try {
@@ -353,6 +504,10 @@ export class CommentsService {
     }
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // Delete
+  // ─────────────────────────────────────────────────────────────
+
   async delete(id: string, userId: string) {
     const session = await this.connection.startSession();
     session.startTransaction();
@@ -361,14 +516,9 @@ export class CommentsService {
 
     try {
       const comment = await this.commentModel.findById(commentObjectId);
-
-      if (!comment) {
-        throw new NotFoundException('Bình luận không tồn tại');
-      }
-
-      if (comment.userId.toString() !== userId.toString()) {
+      if (!comment) throw new NotFoundException('Bình luận không tồn tại');
+      if (comment.userId.toString() !== userId.toString())
         throw new ForbiddenException('Không có quyền xóa');
-      }
 
       const replies = await this.commentModel
         .find({ parent: commentObjectId })
@@ -404,7 +554,10 @@ export class CommentsService {
     }
   }
 
-  //   Admin
+  // ─────────────────────────────────────────────────────────────
+  // Admin
+  // ─────────────────────────────────────────────────────────────
+
   async adminGetComments(page: number, limit: number, qs: string) {
     const { filter, sort } = aqp(qs);
 
@@ -415,23 +568,16 @@ export class CommentsService {
     if (keyword) {
       const unsigned = removeVietnameseTones(keyword);
       const regex = unsigned.trim().split(/\s+/).join('.*');
-
-      filter.comicName_unsigned = {
-        $regex: regex,
-        $options: 'i',
-      };
-
+      filter.comicName_unsigned = { $regex: regex, $options: 'i' };
       delete filter.search;
     }
 
     const safePage = Math.max(1, page || 1);
     const safeLimit = Math.min(100, limit || 10);
-
     const offset = (safePage - 1) * safeLimit;
 
     const [totalItems, result] = await Promise.all([
       this.commentModel.countDocuments(filter),
-
       this.commentModel
         .find(filter)
         .populate('userId', 'name avatar')
@@ -472,7 +618,6 @@ export class CommentsService {
         { session },
       );
 
-      // Cập nhật replyCount của parent nếu comment bị xóa là reply
       if (comment.parent) {
         await this.commentModel.updateOne(
           { _id: comment.parent },
@@ -485,7 +630,6 @@ export class CommentsService {
         { commentId: { $in: [commentObjectId, ...replyIds] } },
         { session },
       );
-
       await this.reportModel.deleteMany(
         { commentId: { $in: [commentObjectId, ...replyIds] } },
         { session },
@@ -520,7 +664,6 @@ export class CommentsService {
       const replies = await this.commentModel
         .find({ parent: { $in: foundObjectIds } })
         .select('_id');
-
       const replyObjectIds = replies.map((r) => r._id as Types.ObjectId);
 
       const allObjectIds = [...foundObjectIds, ...replyObjectIds];
@@ -545,7 +688,6 @@ export class CommentsService {
         { commentId: { $in: allObjectIds } },
         { session },
       );
-
       await this.reportModel.deleteMany(
         { commentId: { $in: allObjectIds } },
         { session },
@@ -569,12 +711,10 @@ export class CommentsService {
 
     const safePage = Math.max(1, page || 1);
     const safeLimit = Math.min(100, limit || 10);
-
     const offset = (safePage - 1) * safeLimit;
 
     const [totalItems, result] = await Promise.all([
       this.reportModel.countDocuments(filter),
-
       this.reportModel
         .find(filter)
         .populate('userId', 'name avatar')
@@ -597,14 +737,10 @@ export class CommentsService {
 
   async adminResolveReport(id: string, status: ReportStatus) {
     const report = await this.reportModel.findById(id);
-
-    if (!report) {
-      throw new NotFoundException('Report không tồn tại');
-    }
+    if (!report) throw new NotFoundException('Report không tồn tại');
 
     report.status = status;
     await report.save();
-
     return report;
   }
 }
