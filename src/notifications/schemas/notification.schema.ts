@@ -54,7 +54,7 @@ export const NotificationSchema = SchemaFactory.createForClass(Notification);
 
 NotificationSchema.index(
   { createdAt: 1 },
-  { expireAfterSeconds: 60 * 60 * 24 * 90 } // auto delete after 90 days
+  { expireAfterSeconds: 60 * 60 * 24 * 30 } // auto delete after 30 days
 );
 NotificationSchema.index({ recipientId: 1, createdAt: -1 });
 NotificationSchema.index({ recipientId: 1, isRead: 1 });

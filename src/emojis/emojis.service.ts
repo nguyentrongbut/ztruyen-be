@@ -109,6 +109,25 @@ export class EmojisService {
       delete filter.search;
     }
 
+    if (filter.category) {
+      const raw = filter.category;
+      let ids: Types.ObjectId[] = [];
+
+      if (Array.isArray(raw)) {
+        ids = raw
+          .filter((id: string) => Types.ObjectId.isValid(id))
+          .map((id: string) => new Types.ObjectId(String(id)));
+      } else if (raw && typeof raw === 'object' && raw.$in) {
+        ids = (raw.$in as string[])
+          .filter((id) => Types.ObjectId.isValid(id))
+          .map((id) => new Types.ObjectId(String(id)));
+      } else if (typeof raw === 'string' && Types.ObjectId.isValid(raw)) {
+        ids = [new Types.ObjectId(raw)];
+      }
+
+      filter.category = ids.length === 1 ? ids[0] : { $in: ids };
+    }
+
     const safePage = Math.max(1, page || 1);
     const safeLimit = Math.min(100, limit || 20);
     const offset = (safePage - 1) * safeLimit;
@@ -212,7 +231,7 @@ export class EmojisService {
       await this.imageService.remove(oldImageId);
     }
 
-    return emoji;
+    return emoji.populate('image', 'url');
   }
 
   async toggle(id: string) {

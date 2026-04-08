@@ -400,7 +400,7 @@ export class CommentsService {
           ],
         })
         .populate('replyTo', 'name')
-        .sort((sort as any) || { createdAt: -1 })
+        .sort((sort as any) || { createdAt: 1 })
         .skip(offset)
         .limit(safeLimit),
     ]);

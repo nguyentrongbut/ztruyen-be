@@ -148,6 +148,12 @@ export class ImagesService {
   }
 
   async updateSlug(id: string, newSlug: string) {
-    return this.imageModel.findByIdAndUpdate(id, { slug: newSlug });
+    const backendUrl = this.configService.get<string>('BACKEND_URL');
+    const newUrl = `${backendUrl}/image/${newSlug}`;
+
+    return this.imageModel.findByIdAndUpdate(id, {
+      slug: newSlug,
+      url: newUrl,
+    });
   }
 }
