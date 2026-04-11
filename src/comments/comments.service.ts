@@ -243,7 +243,7 @@ export class CommentsService {
   private async sendLikeNotification(commentId: string, senderId: string) {
     const comment = await this.commentModel
       .findById(commentId)
-      .select('userId content comicSlug chapterId')
+      .select('userId content comicSlug chapterId comicName')
       .lean();
 
     if (!comment) return;
@@ -433,6 +433,43 @@ export class CommentsService {
     return { meta, result };
   }
 
+  async getCommentById(commentId: string, userId?: string) {
+    if (!Types.ObjectId.isValid(commentId)) {
+      throw new BadRequestException('Invalid commentId');
+    }
+
+    const comment = await this.commentModel
+      .findById(commentId)
+      .select('-comicName_unsigned -isDeleted -deletedAt -__v')
+      .populate({
+        path: 'userId',
+        select: 'name avatar avatar_frame',
+        populate: [
+          { path: 'avatar', select: 'url' },
+          {
+            path: 'avatar_frame',
+            select: 'name image',
+            populate: { path: 'image', select: 'url' },
+          },
+        ],
+      })
+      .populate('replyTo', 'name')
+      .lean();
+
+    if (!comment) throw new NotFoundException('Comment không tồn tại');
+
+    if (userId) {
+      const like = await this.likeModel.findOne({
+        commentId: new Types.ObjectId(commentId),
+        userId: new Types.ObjectId(userId),
+      });
+
+      return { ...comment, isLiked: !!like };
+    }
+
+    return comment;
+  }
+
   // ─────────────────────────────────────────────────────────────
   // Like
   // ─────────────────────────────────────────────────────────────
@@ -485,6 +522,24 @@ export class CommentsService {
     } finally {
       session.endSession();
     }
+  }
+
+  async getPageOfReply(replyId: string, limit = 10) {
+
+    const replyObjectId = new Types.ObjectId(replyId);
+
+    const reply = await this.commentModel
+      .findById(replyObjectId)
+      .select('createdAt parent')
+      .lean();
+    if (!reply) throw new NotFoundException();
+
+    const countBefore = await this.commentModel.countDocuments({
+      parent: reply.parent,
+      createdAt: { $lt: reply.createdAt },
+    });
+
+    return { page: Math.floor(countBefore / limit) + 1 };
   }
 
   // ─────────────────────────────────────────────────────────────

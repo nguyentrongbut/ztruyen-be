@@ -61,7 +61,7 @@ export class NotificationsController {
     return this.service.markAsRead(user._id);
   }
 
-  @Patch(':id/read')
+  @Patch(':id')
   @ResponseMessage('Đánh dấu đã đọc')
   @ApiOperation({ summary: 'Đánh dấu 1 thông báo là đã đọc' })
   markOneAsRead(@Param('id') id: string, @User() user: IUser) {

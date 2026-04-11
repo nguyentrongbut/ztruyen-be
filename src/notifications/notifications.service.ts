@@ -73,10 +73,6 @@ export class NotificationsService {
 
     if (!recipient?.fcmTokens?.length) return;
 
-    const targetUrl = chapterId
-      ? `/truyen/${comicSlug}/chap/${chapterId}#comment-${commentId}`
-      : `/truyen/${comicSlug}#comment-${commentId}`;
-
     await this.firebaseService.sendToTokens(
       recipient.fcmTokens,
       {
@@ -90,7 +86,6 @@ export class NotificationsService {
           replyId,
           comicSlug: comicSlug ?? '',
           chapterId: chapterId ?? '',
-          targetUrl,
         },
       },
       async (expiredTokens) => {
@@ -143,6 +138,7 @@ export class NotificationsService {
         senderName,
         senderAvatar,
         comicSlug,
+        comicName,
         chapterId,
         contentPreview: contentPreview?.slice(0, 100),
       },
@@ -153,10 +149,6 @@ export class NotificationsService {
       .select('fcmTokens');
 
     if (!recipient?.fcmTokens?.length) return;
-
-    const targetUrl = chapterId
-      ? `/truyen/${comicSlug}/chap/${chapterId}#comment-${commentId}`
-      : `/truyen/${comicSlug}#comment-${commentId}`;
 
     await this.firebaseService.sendToTokens(
       recipient.fcmTokens,
@@ -170,7 +162,6 @@ export class NotificationsService {
           commentId,
           comicSlug: comicSlug ?? '',
           chapterId: chapterId ?? '',
-          targetUrl,
         },
       },
       async (expiredTokens) => {

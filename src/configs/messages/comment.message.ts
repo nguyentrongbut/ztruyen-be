@@ -1,7 +1,9 @@
 export const COMMENT_MESSAGES = {
   CREATE_SUCCESS: 'Tạo bình luận thành công',
   GET_ALL_SUCCESS: 'Lấy danh sách bình luận thành công',
+  GET_COMMENT_SUCCESS: 'Lấy chi tiết bình luận thành công',
   GET_REPLIES_SUCCESS: 'Lấy danh sách phản hồi thành công',
+  GET_PAGE_OF_REPLY_SUCCESS: 'Lấy trang chứa reply thành công',
   UPDATE_SUCCESS: 'Cập nhật bình luận thành công',
   DELETE_SUCCESS: 'Xóa bình luận thành công',
   LIKE_SUCCESS: 'Thay đổi trạng thái thích bình luận thành công',

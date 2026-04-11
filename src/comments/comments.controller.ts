@@ -117,11 +117,34 @@ Ví dụ:
     return this.service.getReplies(parentId, page, limit, qs, userId);
   }
 
+  @Get(':id')
+  @ApiOperation({ summary: 'Lấy chi tiết bình luận' })
+  @ResponseMessage(COMMENT_MESSAGES.GET_COMMENT_SUCCESS)
+  async getCommentById(
+    @Param('id') id: string,
+    @User() user?: IUser,
+  ) {
+    return this.service.getCommentById(id, user?._id);
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Xóa bình luận' })
   @ResponseMessage(COMMENT_MESSAGES.DELETE_SUCCESS)
   delete(@Param('id') id: string, @User() user: IUser) {
     return this.service.delete(id, user._id);
+  }
+
+  @Get('page-of-reply/:replyId')
+  @ApiOperation({ summary: 'Lấy trang chứa reply' })
+  @ResponseMessage(COMMENT_MESSAGES.GET_PAGE_OF_REPLY_SUCCESS)
+  async getPageOfReply(
+    @Param('replyId') replyId: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.service.getPageOfReply(
+      replyId,
+      limit ? parseInt(limit) : 10,
+    );
   }
 
   /* ================= ADMIN ================= */
