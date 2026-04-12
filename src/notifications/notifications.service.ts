@@ -3,7 +3,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 
-import { Notification, NotificationDocument } from './schemas/notification.schema';
+import {
+  Notification,
+  NotificationDocument,
+} from './schemas/notification.schema';
 import { User, UserDocument } from '../users/schemas/user.schema';
 import { FirebaseService } from '../firebase/firebase.service';
 import { NotificationType } from '../configs/enums/notification.schema';
@@ -51,7 +54,7 @@ export class NotificationsService {
 
     if (recipientId === senderId) return;
 
-    await this.notificationModel.create({
+    const notification = await this.notificationModel.create({
       recipientId: new Types.ObjectId(recipientId),
       senderId: new Types.ObjectId(senderId),
       type: NotificationType.REPLY_COMMENT,
@@ -76,7 +79,9 @@ export class NotificationsService {
     await this.firebaseService.sendToTokens(
       recipient.fcmTokens,
       {
-        title: `đã phản hồi bình luận của bạn tại ${comicName ?? 'một truyện nào đó'}`,
+        title: `đã phản hồi bình luận của bạn tại ${
+          comicName ?? 'một truyện nào đó'
+        }`,
         body: contentPreview?.slice(0, 100) ?? '',
         data: {
           type: NotificationType.REPLY_COMMENT,
@@ -86,6 +91,8 @@ export class NotificationsService {
           replyId,
           comicSlug: comicSlug ?? '',
           chapterId: chapterId ?? '',
+          comicName: comicName ?? '',
+          notificationId: notification._id.toString(),
         },
       },
       async (expiredTokens) => {
@@ -129,7 +136,7 @@ export class NotificationsService {
 
     if (recipientId.toString() === senderId.toString()) return;
 
-    await this.notificationModel.create({
+    const notification = await this.notificationModel.create({
       recipientId: new Types.ObjectId(recipientId),
       senderId: new Types.ObjectId(senderId),
       type: NotificationType.LIKE_COMMENT,
@@ -153,7 +160,9 @@ export class NotificationsService {
     await this.firebaseService.sendToTokens(
       recipient.fcmTokens,
       {
-        title: `đã thích bình luận của bạn tại ${comicName ?? 'một truyện nào đó'}`,
+        title: `đã thích bình luận của bạn tại ${
+          comicName ?? 'một truyện nào đó'
+        }`,
         body: contentPreview?.slice(0, 100) ?? '',
         data: {
           type: NotificationType.LIKE_COMMENT,
@@ -162,6 +171,8 @@ export class NotificationsService {
           commentId,
           comicSlug: comicSlug ?? '',
           chapterId: chapterId ?? '',
+          comicName: comicName ?? '',
+          notificationId: notification._id.toString(),
         },
       },
       async (expiredTokens) => {
