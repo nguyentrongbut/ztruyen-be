@@ -6,7 +6,7 @@ import {
   Query,
   Param,
   Delete,
-  Patch,
+  Patch, UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -29,9 +29,11 @@ import { ResolveReportDto } from './dto/resolve-report.dto';
 import { IUser } from '../users/users.interface';
 import { CreateReplyDto } from './dto/create-reply.dto';
 import { BulkDeleteCommentDto } from './dto/bulk-delete.comment.dto';
+import { RolesGuard } from '../guards/roles.guard';
 
 @ApiTags('comment')
 @ApiBearerAuth('access-token')
+@UseGuards(RolesGuard)
 @Controller('comment')
 export class CommentsController {
   constructor(private readonly service: CommentsService) {}

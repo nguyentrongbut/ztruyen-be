@@ -17,8 +17,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
   imports: [
     MongooseModule.forFeature([
       { name: Announcement.name, schema: AnnouncementSchema },
-    ]),
-    NotificationsModule
+    ])
   ],
   controllers: [AnnouncementsController],
   providers: [AnnouncementsService],

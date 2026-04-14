@@ -30,14 +30,8 @@ export class Announcement {
 
   @Prop({ default: true, index: true })
   isActive: boolean;
-
-  @Prop({ default: null })
-  startAt: Date;
-
-  @Prop({ default: null })
-  endAt: Date;
 }
 
 export const AnnouncementSchema = SchemaFactory.createForClass(Announcement);
 
-AnnouncementSchema.index({ isActive: 1, startAt: 1, endAt: 1 });
+AnnouncementSchema.index({ isActive: 1 });

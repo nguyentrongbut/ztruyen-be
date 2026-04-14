@@ -6,7 +6,7 @@ import {
   Delete,
   Body,
   Param,
-  Query,
+  Query, UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -26,9 +26,11 @@ import { Emoji } from '../emojis/schemas/emoji.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { EMOJI_CATEGORY_MESSAGES } from '../configs/messages/emoji-category.message';
+import { RolesGuard } from '../guards/roles.guard';
 
 @ApiTags('emoji-category')
 @ApiBearerAuth('access-token')
+@UseGuards(RolesGuard)
 @Controller('emoji-category')
 export class EmojiCategoriesController {
   constructor(

@@ -6,7 +6,7 @@ import {
   Delete,
   Body,
   Param,
-  Query,
+  Query, UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -23,10 +23,11 @@ import { ResponseMessage } from '../decorator/customize';
 import { Roles } from '../decorator/roles.decorator';
 import { RoleType } from '../configs/enums/user.enum';
 import { EMOJI_MESSAGES } from '../configs/messages/emoji.message';
-import { EMOJI_CATEGORY_MESSAGES } from '../configs/messages/emoji-category.message';
+import { RolesGuard } from '../guards/roles.guard';
 
 @ApiTags('emoji')
 @ApiBearerAuth('access-token')
+@UseGuards(RolesGuard)
 @Controller('emoji')
 export class EmojisController {
   constructor(private readonly service: EmojisService) {}

@@ -44,11 +44,11 @@ export class FirebaseService implements OnModuleInit {
 
     const message: admin.messaging.MulticastMessage = {
       tokens,
-      notification: {
+      data: {
         title: payload.title,
         body: payload.body,
+        ...(payload.data ?? {}),
       },
-      data: payload.data ?? {},
       android: { priority: 'high' },
       apns: { payload: { aps: { sound: 'default' } } },
     };
@@ -95,11 +95,11 @@ export class FirebaseService implements OnModuleInit {
   ): Promise<void> {
     const message: admin.messaging.Message = {
       topic,
-      notification: {
+      data: {
         title: payload.title,
         body: payload.body,
+        ...(payload.data ?? {}),
       },
-      data: payload.data ?? {},
       android: { priority: 'high' },
       apns: { payload: { aps: { sound: 'default' } } },
     };

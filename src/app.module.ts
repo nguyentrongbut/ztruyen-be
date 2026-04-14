@@ -26,6 +26,7 @@ import { EmojiCategoriesModule } from './emoji-categories/emoji-categories.modul
 import { NotificationsModule } from './notifications/notifications.module';
 import { FirebaseModule } from './firebase/firebase.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
+import { ComicsModule } from './comics/comics.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { AnnouncementsModule } from './announcements/announcements.module';
     NotificationsModule,
     FirebaseModule,
     AnnouncementsModule,
+    ComicsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
