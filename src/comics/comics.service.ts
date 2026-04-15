@@ -55,11 +55,6 @@ export class ComicsService {
       delete filter.search;
     }
 
-    /* ===== FILTER ===== */
-    if (filter.country) {
-      filter.country = Number(filter.country);
-    }
-
     /* ===== PAGINATION ===== */
     const safePage = Math.max(1, page || 1);
     const safeLimit = Math.min(100, limit || 20);
@@ -69,7 +64,7 @@ export class ComicsService {
       this.comicModel.countDocuments(filter),
       this.comicModel
         .find(filter)
-        .sort((sort as any) || { updatedAt: -1 })
+        .sort((sort as any) || { rank: -1 })
         .skip(offset)
         .limit(safeLimit),
     ]);
@@ -110,7 +105,7 @@ export class ComicsService {
       this.comicModel.countDocuments(filter),
       this.comicModel
         .find(filter)
-        .sort((sort as any) || { createdAt: -1 })
+        .sort((sort as any) || { rank: -1 })
         .skip(offset)
         .limit(safeLimit),
     ]);

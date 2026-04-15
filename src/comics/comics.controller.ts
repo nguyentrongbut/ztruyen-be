@@ -98,19 +98,8 @@ export class ComicsController {
   @Roles(RoleType.ADMIN)
   @ResponseMessage(COMIC_MESSAGES.UPDATE_SUCCESS)
   @ApiOperation({ summary: 'Admin cập nhật truyện' })
-  update(
-    @Param('id') id: string,
-    @Body() updateComicDto: UpdateComicDto,
-  ) {
+  update(@Param('id') id: string, @Body() updateComicDto: UpdateComicDto) {
     return this.comicsService.update(id, updateComicDto);
-  }
-
-  @Delete('admin/:id')
-  @Roles(RoleType.ADMIN)
-  @ResponseMessage(COMIC_MESSAGES.DELETE_SUCCESS)
-  @ApiOperation({ summary: 'Admin xóa truyện' })
-  remove(@Param('id') id: string) {
-    return this.comicsService.remove(id);
   }
 
   @Delete('admin/delete-multi')
@@ -119,6 +108,14 @@ export class ComicsController {
   @ApiOperation({ summary: 'Admin xóa nhiều truyện' })
   bulkDelete(@Body() dto: BulkDeleteComicDto) {
     return this.comicsService.bulkDelete(dto);
+  }
+
+  @Delete('admin/:id')
+  @Roles(RoleType.ADMIN)
+  @ResponseMessage(COMIC_MESSAGES.DELETE_SUCCESS)
+  @ApiOperation({ summary: 'Admin xóa truyện' })
+  remove(@Param('id') id: string) {
+    return this.comicsService.remove(id);
   }
 
   @Post('admin/import')
