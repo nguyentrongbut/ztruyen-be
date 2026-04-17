@@ -76,35 +76,27 @@ export class NotificationsService {
 
     if (!recipient?.fcmTokens?.length) return;
 
-    await this.firebaseService.sendToTokens(
-      recipient.fcmTokens,
-      {
-        title: `đã phản hồi bình luận của bạn tại ${
-          comicName ?? 'một truyện nào đó'
-        }`,
-        body: contentPreview?.slice(0, 100) ?? '',
-        data: {
-          type: NotificationType.REPLY_COMMENT,
-          senderName,
-          senderAvatar: senderAvatar ?? '',
-          commentId,
-          replyId,
-          comicSlug: comicSlug ?? '',
-          chapterId: chapterId ?? '',
-          comicName: comicName ?? '',
-          notificationId: notification._id.toString(),
-        },
+    const title = `${senderName} đã phản hồi bình luận tại ${
+      comicName ?? 'một truyện'
+    }`;
+
+    const body = contentPreview?.slice(0, 100) ?? '';
+
+    await this.firebaseService.sendToTokens(recipient.fcmTokens, {
+      title,
+      body,
+      data: {
+        type: NotificationType.REPLY_COMMENT,
+        senderName,
+        senderAvatar: senderAvatar ?? '',
+        commentId,
+        replyId,
+        comicSlug: comicSlug ?? '',
+        chapterId: chapterId ?? '',
+        comicName: comicName ?? '',
+        notificationId: notification._id.toString(),
       },
-      async (expiredTokens) => {
-        await this.userModel.updateOne(
-          { _id: recipientId },
-          { $pull: { fcmTokens: { $in: expiredTokens } } },
-        );
-        this.logger.log(
-          `Removed ${expiredTokens.length} expired FCM token(s) for user ${recipientId}`,
-        );
-      },
-    );
+    });
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -157,31 +149,26 @@ export class NotificationsService {
 
     if (!recipient?.fcmTokens?.length) return;
 
-    await this.firebaseService.sendToTokens(
-      recipient.fcmTokens,
-      {
-        title: `đã thích bình luận của bạn tại ${
-          comicName ?? 'một truyện nào đó'
-        }`,
-        body: contentPreview?.slice(0, 100) ?? '',
-        data: {
-          type: NotificationType.LIKE_COMMENT,
-          senderName,
-          senderAvatar: senderAvatar ?? '',
-          commentId,
-          comicSlug: comicSlug ?? '',
-          chapterId: chapterId ?? '',
-          comicName: comicName ?? '',
-          notificationId: notification._id.toString(),
-        },
+    const title = `${senderName} đã thích bình luận tại ${
+      comicName ?? 'một truyện'
+    }`;
+
+    const body = contentPreview?.slice(0, 100) ?? '';
+
+    await this.firebaseService.sendToTokens(recipient.fcmTokens, {
+      title,
+      body,
+      data: {
+        type: NotificationType.LIKE_COMMENT,
+        senderName,
+        senderAvatar: senderAvatar ?? '',
+        commentId,
+        comicSlug: comicSlug ?? '',
+        chapterId: chapterId ?? '',
+        comicName: comicName ?? '',
+        notificationId: notification._id.toString(),
       },
-      async (expiredTokens) => {
-        await this.userModel.updateOne(
-          { _id: recipientId },
-          { $pull: { fcmTokens: { $in: expiredTokens } } },
-        );
-      },
-    );
+    });
   }
 
   // ─────────────────────────────────────────────────────────────

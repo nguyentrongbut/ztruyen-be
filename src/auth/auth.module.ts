@@ -21,6 +21,7 @@ import { LocalStrategy } from './passport/strategies/local.strategy';
 import { JwtStrategy } from './passport/strategies/jwt.strategy';
 import { GoogleStrategy } from './passport/strategies/google.strategy';
 import { FacebookStrategy } from './passport/strategies/facebook.strategy';
+import { DiscordStrategy } from './passport/strategies/discord.strategy';
 
 // ** ms
 import ms from 'ms';
@@ -52,6 +53,7 @@ import ms from 'ms';
     EmailService,
     GoogleStrategy,
     FacebookStrategy,
+    DiscordStrategy,
   ],
 })
 export class AuthModule {}

@@ -27,10 +27,9 @@ export class FirebaseService implements OnModuleInit {
     this.logger.log('Firebase Admin initialized');
   }
 
-  /**
-   * Gửi FCM đến nhiều token cùng lúc (multi-device).
-   * Tự động gọi onExpiredTokens callback với danh sách token hết hạn để caller cleanup.
-   */
+  // ─────────────────────────────────────────────────────────────
+  // SEND TO TOKENS
+  // ─────────────────────────────────────────────────────────────
   async sendToTokens(
     tokens: string[],
     payload: {
@@ -40,17 +39,59 @@ export class FirebaseService implements OnModuleInit {
     },
     onExpiredTokens?: (expiredTokens: string[]) => Promise<void>,
   ): Promise<void> {
+    const baseUrl = this.config.get<string>('FE_CLIENT_URL');
+
     if (!tokens.length) return;
 
     const message: admin.messaging.MulticastMessage = {
       tokens,
-      data: {
+
+      notification: {
         title: payload.title,
         body: payload.body,
+      },
+
+      data: {
         ...(payload.data ?? {}),
       },
-      android: { priority: 'high' },
-      apns: { payload: { aps: { sound: 'default' } } },
+
+      android: {
+        priority: 'high',
+        notification: {
+          sound: 'default',
+        },
+      },
+
+      apns: {
+        payload: {
+          aps: {
+            sound: 'default',
+            badge: 1,
+          },
+        },
+      },
+
+      webpush: {
+        notification: {
+          title: payload.title,
+          body: payload.body,
+          icon: 'https://img.ztruyen.io.vn/public/favicon/favicon.ico',
+          badge: 'https://img.ztruyen.io.vn/public/favicon/favicon.ico',
+          requireInteraction: true,
+        },
+
+        fcmOptions: {
+          link: payload.data?.comicSlug
+            ? `${baseUrl}/truyen-tranh/${payload.data.comicSlug}.html`
+            : baseUrl,
+        },
+
+        data: {
+          title: payload.title,
+          body: payload.body,
+          ...(payload.data ?? {}),
+        },
+      },
     };
 
     const response = await admin.messaging().sendEachForMulticast(message);
@@ -62,6 +103,7 @@ export class FirebaseService implements OnModuleInit {
         this.logger.warn(
           `FCM failed token[${idx}]: ${res.error?.code} — ${res.error?.message}`,
         );
+
         if (
           res.error?.code === 'messaging/registration-token-not-registered' ||
           res.error?.code === 'messaging/invalid-registration-token'
@@ -73,18 +115,16 @@ export class FirebaseService implements OnModuleInit {
 
     if (expiredTokens.length && onExpiredTokens) {
       await onExpiredTokens(expiredTokens).catch((err) =>
-        this.logger.error('Cleanup expired FCM tokens failed', err),
+        this.logger.error('Cleanup expired tokens failed', err),
       );
-      this.logger.log(
-        `Cleaned up ${expiredTokens.length} expired FCM token(s)`,
-      );
+
+      this.logger.log(`Cleaned ${expiredTokens.length} expired FCM token(s)`);
     }
   }
 
-  /**
-   * Gửi FCM topic broadcast — dùng cho thông báo toàn hệ thống.
-   * Client subscribe topic 'global' khi mở app (không cần login).
-   */
+  // ─────────────────────────────────────────────────────────────
+  // SEND TO TOPIC
+  // ─────────────────────────────────────────────────────────────
   async sendToTopic(
     topic: string,
     payload: {
@@ -95,26 +135,61 @@ export class FirebaseService implements OnModuleInit {
   ): Promise<void> {
     const message: admin.messaging.Message = {
       topic,
-      data: {
+
+      notification: {
         title: payload.title,
         body: payload.body,
+      },
+
+      data: {
         ...(payload.data ?? {}),
       },
-      android: { priority: 'high' },
-      apns: { payload: { aps: { sound: 'default' } } },
+
+      android: {
+        priority: 'high',
+        notification: {
+          sound: 'default',
+        },
+      },
+
+      apns: {
+        payload: {
+          aps: {
+            sound: 'default',
+            badge: 1,
+          },
+        },
+      },
+
+      webpush: {
+        notification: {
+          title: payload.title,
+          body: payload.body,
+          icon: 'https://firebase.google.com/images/social.png',
+          badge: 'https://firebase.google.com/images/social.png',
+        },
+
+        fcmOptions: {
+          link: `https://your-domain.com/truyen-tranh/${payload.data?.comicSlug}.html`,
+        },
+      },
     };
 
     const messageId = await admin.messaging().send(message);
-    this.logger.log(`Sent FCM topic [${topic}] — messageId: ${messageId}`);
+
+    this.logger.log(`Sent topic [${topic}] — messageId: ${messageId}`);
   }
 
+  // ─────────────────────────────────────────────────────────────
+  // TOPIC SUBSCRIBE
+  // ─────────────────────────────────────────────────────────────
   async subscribeToTopic(token: string, topic: string): Promise<void> {
     await admin.messaging().subscribeToTopic(token, topic);
-    this.logger.log(`Subscribed token to topic [${topic}]`);
+    this.logger.log(`Subscribed token → ${topic}`);
   }
 
   async unsubscribeFromTopic(token: string, topic: string): Promise<void> {
     await admin.messaging().unsubscribeFromTopic(token, topic);
-    this.logger.log(`Unsubscribed token from topic [${topic}]`);
+    this.logger.log(`Unsubscribed token → ${topic}`);
   }
 }

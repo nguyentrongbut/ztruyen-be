@@ -54,6 +54,7 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
+import { DiscordAuthGuard } from './passport/guards/discord-auth.guard';
 
 @ApiTags('authentication')
 @Controller('auth')
@@ -97,6 +98,33 @@ export class AuthController {
     });
 
     return { access_token: accessToken, user };
+  }
+
+  // Login social
+  @Public()
+  @Get('discord')
+  @UseGuards(DiscordAuthGuard)
+  @ApiOperation({ summary: 'Đăng nhập bằng Discord' })
+  async discordAuth() {}
+
+  @Public()
+  @Get('discord/callback')
+  @UseGuards(DiscordAuthGuard)
+  @ApiExcludeEndpoint()
+  async discordAuthRedirect(@Req() req, @Res() response: Response) {
+    const { refreshToken, redirectUrl } = await this.authService.socialLogin(
+      req.user,
+      ProviderType.DISCORD,
+    );
+
+    response.cookie('ZTC_token', refreshToken, {
+      httpOnly: true,
+      maxAge: ms(this.configService.get<string>('JWT_REFRESH_TOKEN_EXPIRE')),
+      sameSite: 'none',
+      secure: true,
+    });
+
+    return response.redirect(redirectUrl);
   }
 
   @Public()

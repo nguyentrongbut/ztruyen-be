@@ -2,6 +2,7 @@ export enum ProviderType {
   LOCAL = 'local',
   GOOGLE = 'google',
   FACEBOOK = 'facebook',
+  DISCORD = 'discord'
 }
 
 export enum RoleType {
