@@ -63,10 +63,20 @@ export class FirebaseService implements OnModuleInit {
       },
 
       apns: {
+        headers: {
+          'apns-priority': '10',
+          'apns-push-type': 'alert',
+        },
         payload: {
           aps: {
             sound: 'default',
             badge: 1,
+            alert: {
+              title: payload.title,
+              body: payload.body,
+            },
+            'mutable-content': 1,
+            'content-available': 1,
           },
         },
       },
