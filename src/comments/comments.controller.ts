@@ -6,7 +6,8 @@ import {
   Query,
   Param,
   Delete,
-  Patch, UseGuards,
+  Patch,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -119,16 +120,6 @@ Ví dụ:
     return this.service.getReplies(parentId, page, limit, qs, userId);
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Lấy chi tiết bình luận' })
-  @ResponseMessage(COMMENT_MESSAGES.GET_COMMENT_SUCCESS)
-  async getCommentById(
-    @Param('id') id: string,
-    @User() user?: IUser,
-  ) {
-    return this.service.getCommentById(id, user?._id);
-  }
-
   @Delete(':id')
   @ApiOperation({ summary: 'Xóa bình luận' })
   @ResponseMessage(COMMENT_MESSAGES.DELETE_SUCCESS)
@@ -143,10 +134,7 @@ Ví dụ:
     @Param('replyId') replyId: string,
     @Query('limit') limit?: string,
   ) {
-    return this.service.getPageOfReply(
-      replyId,
-      limit ? parseInt(limit) : 10,
-    );
+    return this.service.getPageOfReply(replyId, limit ? parseInt(limit) : 10);
   }
 
   /* ================= ADMIN ================= */
@@ -164,6 +152,13 @@ Ví dụ:
     @Query() qs: string,
   ) {
     return this.service.adminGetComments(+page, +limit, qs);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Lấy chi tiết bình luận' })
+  @ResponseMessage(COMMENT_MESSAGES.GET_COMMENT_SUCCESS)
+  async getCommentById(@Param('id') id: string, @User() user?: IUser) {
+    return this.service.getCommentById(id, user?._id);
   }
 
   @Delete('admin/delete-multi')
