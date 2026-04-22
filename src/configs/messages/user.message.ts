@@ -10,6 +10,8 @@ export const USERS_MESSAGES = {
   // --- CREATE / UPDATE ---
   EMAIL_EXISTED: 'Email đã được sử dụng bởi người dùng khác!',
   NAME_EXISTED: 'Tên đã được sử dụng bởi người dùng khác!',
+  PASSWORD_NOT_SUPPORTED: 'Tài khoản không hỗ trợ đổi mật khẩu',
+  PASSWORD_MUST_BE_DIFFERENT: 'Mật khẩu mới phải khác mật khẩu cũ',
   CREATE_SUCCESS: 'Tạo người dùng thành công!',
   UPDATE_SUCCESS: 'Cập nhật người dùng thành công!',
   UPDATE_PROFILE_SUCCESS: 'Cập nhật hồ sơ thành công!',

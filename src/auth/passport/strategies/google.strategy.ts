@@ -1,4 +1,4 @@
-// ** NestJs
+// ** NestJS
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -13,9 +13,9 @@ import { ProviderType } from '../../../configs/enums/user.enum';
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(private configService: ConfigService) {
     super({
-      clientID: configService.get('GOOGLE_CLIENT_ID'),
-      clientSecret: configService.get('GOOGLE_CLIENT_SECRET'),
-      callbackURL: configService.get('GOOGLE_CALLBACK_URL'),
+      clientID: configService.get<string>('GOOGLE_CLIENT_ID'),
+      clientSecret: configService.get<string>('GOOGLE_CLIENT_SECRET'),
+      callbackURL: configService.get<string>('GOOGLE_CALLBACK_URL'),
       scope: ['email', 'profile'],
     });
   }
@@ -26,14 +26,32 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     profile: any,
     done: VerifyCallback,
   ): Promise<any> {
-    const { name, emails, photos } = profile;
-    const user = {
-      email: emails?.[0]?.value,
-      name: name?.givenName + ' ' + name?.familyName,
-      avatar: photos?.[0]?.value,
-      provider: ProviderType.GOOGLE,
-      accessToken,
-    };
-    done(null, user);
+    try {
+      const { emails, photos, displayName, name } = profile;
+
+      const email = emails?.[0]?.value;
+
+      const fullName =
+        displayName ||
+        [name?.givenName, name?.familyName]
+          .filter(Boolean)
+          .join(' ') ||
+        email?.split('@')[0] ||
+        'User';
+
+      const user = {
+        email,
+        name: fullName,
+        avatar: photos?.[0]?.value || null,
+        provider: ProviderType.GOOGLE,
+        providerId: profile.id,
+        accessToken,
+      };
+
+      return done(null, user);
+    } catch (error) {
+      console.error('Google validate error:', error);
+      return done(error, null);
+    }
   }
 }

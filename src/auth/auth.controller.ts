@@ -132,9 +132,7 @@ export class AuthController {
   @ResponseMessage(AUTH_MESSAGES.SOCIAL_LOGIN_SUCCESS)
   @UseGuards(GoogleAuthGuard)
   @ApiOperation({
-    summary: 'Đăng nhập bằng Google',
-    description:
-      'Redirect người dùng sang trang đăng nhập Google OAuth. Sau khi đăng nhập thành công sẽ callback về backend.',
+    summary: 'Đăng nhập bằng Google'
   })
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   async googleAuth() {}
@@ -144,9 +142,7 @@ export class AuthController {
   @ResponseMessage(AUTH_MESSAGES.SOCIAL_LOGIN_SUCCESS)
   @UseGuards(FacebookAuthGuard)
   @ApiOperation({
-    summary: 'Đăng nhập bằng Facebook',
-    description:
-      'Redirect người dùng sang trang đăng nhập Facebook OAuth. Sau khi đăng nhập thành công sẽ callback về backend.',
+    summary: 'Đăng nhập bằng Facebook'
   })
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   async login() {}

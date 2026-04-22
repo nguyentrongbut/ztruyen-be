@@ -27,6 +27,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { FirebaseModule } from './firebase/firebase.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { ComicsModule } from './comics/comics.module';
+import { GuidesModule } from './guides/guides.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { ComicsModule } from './comics/comics.module';
     FirebaseModule,
     AnnouncementsModule,
     ComicsModule,
+    GuidesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

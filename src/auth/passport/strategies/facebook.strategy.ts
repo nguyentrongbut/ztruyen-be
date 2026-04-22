@@ -1,4 +1,4 @@
-// ** NeetJs
+// ** NestJS
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
@@ -13,16 +13,15 @@ import { ProviderType } from '../../../configs/enums/user.enum';
 export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
   constructor(private configService: ConfigService) {
     super({
-      clientID: configService.get('FACEBOOK_CLIENT_ID'),
-      clientSecret: configService.get('FACEBOOK_CLIENT_SECRET'),
-      callbackURL: configService.get('FACEBOOK_CALLBACK_URL'),
+      clientID: configService.get<string>('FACEBOOK_CLIENT_ID'),
+      clientSecret: configService.get<string>('FACEBOOK_CLIENT_SECRET'),
+      callbackURL: configService.get<string>('FACEBOOK_CALLBACK_URL'),
       profileFields: [
         'id',
         'emails',
         'name',
+        'displayName',
         'picture.type(large)',
-        'birthday',
-        'gender',
       ],
       scope: ['public_profile', 'email'],
     });
@@ -32,17 +31,34 @@ export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
     accessToken: string,
     refreshToken: string,
     profile: any,
-    done: (error: any, user?: any, info?: any) => void,
+    done: (error: any, user?: any) => void,
   ): Promise<any> {
-    const { id, name, emails, photos } = profile;
+    try {
+      const { id, name, emails, photos, displayName } = profile;
 
-    const user = {
-      email: emails?.[0]?.value || `${id}@facebook.com`,
-      name: `${name?.givenName || ''} ${name?.familyName || ''}`.trim(),
-      avatar: photos?.[0]?.value,
-      provider: ProviderType.FACEBOOK,
-      accessToken,
-    };
-    done(null, user);
+      const email = emails?.[0]?.value || `${id}@facebook.com`;
+
+      const fullName =
+        displayName ||
+        [name?.givenName, name?.familyName]
+          .filter(Boolean)
+          .join(' ') ||
+        email.split('@')[0] ||
+        'User';
+
+      const user = {
+        email,
+        name: fullName,
+        avatar: photos?.[0]?.value || null,
+        provider: ProviderType.FACEBOOK,
+        providerId: id,
+        accessToken,
+      };
+
+      return done(null, user);
+    } catch (error) {
+      console.error('Facebook validate error:', error);
+      return done(error, null);
+    }
   }
 }

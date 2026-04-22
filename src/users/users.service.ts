@@ -317,6 +317,14 @@ export class UsersService {
       throw new NotFoundException(USERS_MESSAGES.USER_NOT_FOUND);
     }
 
+    if (!foundUser.password) {
+      throw new BadRequestException(USERS_MESSAGES.PASSWORD_NOT_SUPPORTED);
+    }
+
+    if (oldPassword === newPassword) {
+      throw new BadRequestException(USERS_MESSAGES.PASSWORD_MUST_BE_DIFFERENT);
+    }
+
     const isMatch = this.isValidPassword(oldPassword, foundUser.password);
 
     if (!isMatch) {

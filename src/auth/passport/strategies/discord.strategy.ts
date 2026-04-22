@@ -1,4 +1,4 @@
-// ** Nestjs
+// ** NestJS
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -27,26 +27,33 @@ export class DiscordStrategy extends PassportStrategy(Strategy, 'discord') {
     profile: Profile,
     done: VerifyCallback,
   ): Promise<any> {
-    const { id, username, email, avatar, global_name } = profile;
+    try {
+      const { id, username, email, avatar, global_name } = profile as any;
 
-    // Discord có thể cung cấp global_name (tên hiển thị) hoặc username
-    const displayName = global_name || username;
+      const safeEmail = email || `${id}@discord.com`;
 
-    // Xây dựng URL avatar nếu có
-    let avatarUrl: string | null = null;
-    if (avatar) {
-      avatarUrl = `https://cdn.discordapp.com/avatars/${id}/${avatar}.png`;
+      const fullName =
+        global_name ||
+        username ||
+        safeEmail.split('@')[0] ||
+        'User';
+
+      const avatarUrl = `https://cdn.discordapp.com/avatars/${id}/${avatar}.png`;
+
+
+      const user = {
+        email: safeEmail,
+        name: fullName,
+        avatar: avatarUrl,
+        provider: ProviderType.DISCORD,
+        providerId: id,
+        accessToken,
+      };
+
+      return done(null, user);
+    } catch (error) {
+      console.error('Discord validate error:', error);
+      return done(error, null);
     }
-
-    const user = {
-      email: email,
-      name: displayName,
-      avatar: avatarUrl,
-      provider: ProviderType.DISCORD,
-      discordId: id,
-      accessToken,
-    };
-
-    done(null, user);
   }
 }
