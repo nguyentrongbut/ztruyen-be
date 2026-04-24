@@ -28,7 +28,7 @@ export class Announcement {
   })
   type: AnnouncementType;
 
-  @Prop({ default: true, index: true })
+  @Prop({ default: false, index: true })
   isActive: boolean;
 }
 

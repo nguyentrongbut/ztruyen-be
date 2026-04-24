@@ -36,7 +36,7 @@ import { COMIC_MESSAGES } from '../configs/messages/comic.message';
 import { BulkDeleteComicDto } from './dto/bulk-delete-comic.dto';
 import { BulkCreateComicDto } from './dto/bulk-create-comic.dto';
 
-@ApiTags('comics')
+@ApiTags('comic')
 @ApiBearerAuth('access-token')
 @UseGuards(RolesGuard)
 @Controller('comic')

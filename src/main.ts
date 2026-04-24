@@ -62,7 +62,7 @@ async function bootstrap() {
 
 [ztruyen.io.vn](https://ztruyen.io.vn) Website cung cấp truyện tranh miễn phí nhanh chất lượng cao.  
 Nguồn truyện tranh chất lượng cao cập nhật nhanh nhất.  
-API truyện tranh, Data truyện tranh miễn phí.`
+API truyện tranh, Data truyện tranh miễn phí.`;
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('ztruyen API')
@@ -81,43 +81,19 @@ API truyện tranh, Data truyện tranh miễn phí.`
     )
 
     // ===== TAG DESCRIPTIONS =====
-    .addTag(
-      'authentication',
-      'Xác thực người dùng',
-    )
-    .addTag(
-      'user',
-      'Người dùng',
-    )
-    .addTag(
-      'image',
-      'Hình ảnh',
-    )
-    .addTag(
-      'upload',
-      'Upload ảnh',
-    )
-    .addTag(
-      'favorite',
-      'Yêu thích',
-    )
-    .addTag(
-      'frame',
-      'Khung',
-    )
-    .addTag(
-      'comment',
-      'Bình luận',
-    )
-    .addTag(
-      'emoji',
-      'emoji picker',
-    )
-    .addTag(
-      'emoji-category',
-      'danh mục emoji',
-    )
-
+    .addTag('authentication', 'Xác thực người dùng')
+    .addTag('user', 'Người dùng')
+    .addTag('image', 'Hình ảnh')
+    .addTag('upload', 'Upload ảnh')
+    .addTag('favorite', 'Yêu thích')
+    .addTag('frame', 'Khung')
+    .addTag('comment', 'Bình luận')
+    .addTag('emoji', 'emoji picker')
+    .addTag('emoji-category', 'danh mục emoji')
+    .addTag('notification', 'Thông báo khi reply hoặc like comment')
+    .addTag('announcement', 'Popup thông báo')
+    .addTag('comic', 'BXH truyện')
+    .addTag('guide', 'hướng dẫn')
 
     .build();
 
