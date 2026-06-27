@@ -27,7 +27,6 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { FirebaseModule } from './firebase/firebase.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { ComicsModule } from './comics/comics.module';
-import { GuidesModule } from './guides/guides.module';
 
 @Module({
   imports: [
@@ -58,10 +57,9 @@ import { GuidesModule } from './guides/guides.module';
     NotificationsModule,
     FirebaseModule,
     AnnouncementsModule,
-    ComicsModule,
-    GuidesModule,
+    ComicsModule
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
