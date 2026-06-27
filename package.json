@@ -8,7 +8,7 @@
   "scripts": {
     "build": "nest build && npm run copy-templates",
     "copy-templates": "copyfiles -u 1 src/email/templates/**/* dist/email/templates",
-    "start": "nest start",
+    "start": "node dist/main.js",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
