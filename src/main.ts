@@ -25,6 +25,10 @@ async function bootstrap() {
   const feClientUrl = configService.get<string>('FE_CLIENT_URL');
   const feAdminUrl = configService.get<string>('FE_ADMIN_URL');
 
+  // debug log
+  console.log('[DEBUG] FE_CLIENT_URL:', feClientUrl);
+  console.log('[DEBUG] FE_ADMIN_URL:', feAdminUrl);
+
   // Global guard & Interceptor
   app.useGlobalGuards(new JwtAuthGuard(reflector));
   app.useGlobalInterceptors(new TransformInterceptor(reflector));
