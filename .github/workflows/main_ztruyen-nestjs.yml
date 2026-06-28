@@ -18,6 +18,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check env keys (debug)
+        run: |
+          echo "PORT set: ${{ secrets.PORT != '' }}"
+          echo "BACKEND_URL set: ${{ secrets.BACKEND_URL != '' }}"
+          echo "CLOUDFLARE_TURNSTILE_SECRET set: ${{ secrets.CLOUDFLARE_TURNSTILE_SECRET != '' }}"
+          echo "EMAIL_RESET_PASSWORD_EXPIRE set: ${{ secrets.EMAIL_RESET_PASSWORD_EXPIRE != '' }}"
+          echo "FE_CLIENT_URL set: ${{ secrets.FE_CLIENT_URL != '' }}"
+          echo "FE_ADMIN_URL set: ${{ secrets.FE_ADMIN_URL != '' }}"
+          echo "MONGO_URL set: ${{ secrets.MONGO_URL != '' }}"
+          echo "JWT_ACCESS_TOKEN set: ${{ secrets.JWT_ACCESS_TOKEN != '' }}"
+          echo "JWT_ACCESS_TOKEN_EXPIRE set: ${{ secrets.JWT_ACCESS_TOKEN_EXPIRE != '' }}"
+          echo "JWT_REFRESH_TOKEN set: ${{ secrets.JWT_REFRESH_TOKEN != '' }}"
+          echo "JWT_REFRESH_TOKEN_EXPIRE set: ${{ secrets.JWT_REFRESH_TOKEN_EXPIRE != '' }}"
+          echo "RESEND_API_KEY set: ${{ secrets.RESEND_API_KEY != '' }}"
+          echo "RESEND_FROM_EMAIL set: ${{ secrets.RESEND_FROM_EMAIL != '' }}"
+          echo "GOOGLE_CLIENT_ID set: ${{ secrets.GOOGLE_CLIENT_ID != '' }}"
+          echo "GOOGLE_CLIENT_SECRET set: ${{ secrets.GOOGLE_CLIENT_SECRET != '' }}"
+          echo "GOOGLE_CALLBACK_URL set: ${{ secrets.GOOGLE_CALLBACK_URL != '' }}"
+          echo "FACEBOOK_CLIENT_ID set: ${{ secrets.FACEBOOK_CLIENT_ID != '' }}"
+          echo "FACEBOOK_CLIENT_SECRET set: ${{ secrets.FACEBOOK_CLIENT_SECRET != '' }}"
+          echo "FACEBOOK_CALLBACK_URL set: ${{ secrets.FACEBOOK_CALLBACK_URL != '' }}"
+          echo "DISCORD_CLIENT_ID set: ${{ secrets.DISCORD_CLIENT_ID != '' }}"
+          echo "DISCORD_CLIENT_SECRET set: ${{ secrets.DISCORD_CLIENT_SECRET != '' }}"
+          echo "DISCORD_CALLBACK_URL set: ${{ secrets.DISCORD_CALLBACK_URL != '' }}"
+          echo "FIREBASE_PROJECT_ID set: ${{ secrets.FIREBASE_PROJECT_ID != '' }}"
+          echo "FIREBASE_CLIENT_EMAIL set: ${{ secrets.FIREBASE_CLIENT_EMAIL != '' }}"
+          echo "FIREBASE_PRIVATE_KEY set: ${{ secrets.FIREBASE_PRIVATE_KEY != '' }}"
+          echo "TELEGRAM_BOT_TOKEN set: ${{ secrets.TELEGRAM_BOT_TOKEN != '' }}"
+          echo "TELEGRAM_CHAT_ID set: ${{ secrets.TELEGRAM_CHAT_ID != '' }}"
+
       - name: Set up Node.js version
         uses: actions/setup-node@v3
         with:
