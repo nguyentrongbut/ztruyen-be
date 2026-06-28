@@ -23,6 +23,11 @@ jobs:
         with:
           node-version: '22.x'
 
+      - name: Print env
+        run: |
+          echo "FE_CLIENT_URL=$FE_CLIENT_URL"
+          echo "FE_ADMIN_URL=$FE_ADMIN_URL"
+
       - name: npm install, build, and test
         run: |
           npm install
