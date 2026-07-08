@@ -60,4 +60,20 @@ export class DashboardStatisticsController {
       },
     };
   }
+
+  @Get('demographics')
+  @Roles(RoleType.ADMIN)
+  @ResponseMessage(DASHBOARD_STATISTICS_MESSAGES.GET_DEMOGRAPHICS_SUCCESS)
+  @ApiOperation({
+    summary: 'Lấy số liệu nhân khẩu học độ tuổi của người dùng',
+  })
+  async getDemographics() {
+    const data = await this.statsService.getDemographics();
+    return {
+      data,
+      meta: {
+        generated_at: new Date().toISOString(),
+      },
+    };
+  }
 }

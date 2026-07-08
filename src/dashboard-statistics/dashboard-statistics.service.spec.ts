@@ -269,4 +269,104 @@ describe('DashboardStatisticsService', () => {
       expect(toDate.getTime()).toBeLessThanOrEqual(after.getTime() + 1000);
     });
   });
+
+  describe('getDemographics', () => {
+    it('should aggregate users and group them by age range, zero-filling and sorting in fixed order', async () => {
+      mockUserAggregate.mockResolvedValue([
+        { _id: '18-25', count: 5 },
+        { _id: '36-45', count: 12 },
+        { _id: 'Unknown', count: 3 },
+      ]);
+
+      const result = await service.getDemographics();
+
+      expect(result).toEqual([
+        { group: '<18', count: 0 },
+        { group: '18-25', count: 5 },
+        { group: '26-35', count: 0 },
+        { group: '36-45', count: 12 },
+        { group: '>45', count: 0 },
+        { group: 'Unknown', count: 3 },
+      ]);
+
+      const pipeline = mockUserAggregate.mock.calls[0][0];
+      expect(pipeline[0]).toEqual({ $match: { isDeleted: { $ne: true } } });
+
+      expect(pipeline[3]).toEqual({
+        $group: {
+          _id: '$group',
+          count: { $sum: 1 },
+        },
+      });
+    });
+
+    it('should use $isNumber guard for the age field and $ne null for birthday fallback', async () => {
+      mockUserAggregate.mockResolvedValue([]);
+
+      await service.getDemographics();
+
+      const pipeline = mockUserAggregate.mock.calls[0][0];
+      const ageCondition = pipeline[1].$project.calculatedAge;
+
+      // age branch: checks $ne null AND $isNumber
+      const ageIfCondition = ageCondition.$cond.if.$and;
+      expect(ageIfCondition).toEqual(
+        expect.arrayContaining([
+          { $ne: ['$age', null] },
+          { $isNumber: '$age' },
+        ]),
+      );
+
+      // birthday fallback branch: checks $ne null
+      const birthdayCondition = ageCondition.$cond.else.$cond;
+      expect(birthdayCondition.if.$and).toEqual(
+        expect.arrayContaining([{ $ne: ['$birthday', null] }]),
+      );
+
+      // final else: null (Unknown)
+      expect(birthdayCondition.else).toBeNull();
+    });
+
+    it('should route negative calculatedAge to Unknown via $switch guard', async () => {
+      mockUserAggregate.mockResolvedValue([]);
+
+      await service.getDemographics();
+
+      const pipeline = mockUserAggregate.mock.calls[0][0];
+      const switchBranches = pipeline[2].$project.group.$switch.branches;
+
+      // First branch: null → Unknown
+      expect(switchBranches[0]).toEqual({
+        case: { $eq: ['$calculatedAge', null] },
+        then: 'Unknown',
+      });
+
+      // Second branch: negative → Unknown
+      expect(switchBranches[1]).toEqual({
+        case: { $lt: ['$calculatedAge', 0] },
+        then: 'Unknown',
+      });
+
+      // Third branch: <18
+      expect(switchBranches[2]).toEqual({
+        case: { $lt: ['$calculatedAge', 18] },
+        then: '<18',
+      });
+    });
+
+    it('should return all groups with count 0 when db returns empty results', async () => {
+      mockUserAggregate.mockResolvedValue([]);
+
+      const result = await service.getDemographics();
+
+      expect(result).toEqual([
+        { group: '<18', count: 0 },
+        { group: '18-25', count: 0 },
+        { group: '26-35', count: 0 },
+        { group: '36-45', count: 0 },
+        { group: '>45', count: 0 },
+        { group: 'Unknown', count: 0 },
+      ]);
+    });
+  });
 });
