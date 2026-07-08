@@ -33,10 +33,22 @@ const mockDemographicsData = [
   { group: 'Unknown', count: 6 },
 ];
 
+const mockTopGenresData = [
+  { genre: 'Action', count: 15 },
+  { genre: 'Comedy', count: 10 },
+];
+
+const mockTopComicsData = [
+  { comic_name: 'Comic A', comic_slug: 'comic-a', count: 20 },
+  { comic_name: 'Comic B', comic_slug: 'comic-b', count: 12 },
+];
+
 const mockStatsService = {
   getOverview: jest.fn().mockResolvedValue(mockOverviewData),
   getRegistrations: jest.fn().mockResolvedValue(mockRegistrationsData),
   getDemographics: jest.fn().mockResolvedValue(mockDemographicsData),
+  getTopGenres: jest.fn().mockResolvedValue(mockTopGenresData),
+  getTopComics: jest.fn().mockResolvedValue(mockTopComicsData),
 };
 
 describe('DashboardStatisticsController', () => {
@@ -110,6 +122,36 @@ describe('DashboardStatisticsController', () => {
         },
       });
       expect(mockStatsService.getDemographics).toHaveBeenCalled();
+    });
+  });
+
+  describe('getTopGenres', () => {
+    it('should return top genres list inside standard response envelope', async () => {
+      const query = { limit: 5 };
+      const response = await controller.getTopGenres(query);
+
+      expect(response).toEqual({
+        data: mockTopGenresData,
+        meta: {
+          generated_at: expect.any(String),
+        },
+      });
+      expect(mockStatsService.getTopGenres).toHaveBeenCalledWith(query.limit);
+    });
+  });
+
+  describe('getTopComics', () => {
+    it('should return top comics list inside standard response envelope', async () => {
+      const query = { limit: 5 };
+      const response = await controller.getTopComics(query);
+
+      expect(response).toEqual({
+        data: mockTopComicsData,
+        meta: {
+          generated_at: expect.any(String),
+        },
+      });
+      expect(mockStatsService.getTopComics).toHaveBeenCalledWith(query.limit);
     });
   });
 });
