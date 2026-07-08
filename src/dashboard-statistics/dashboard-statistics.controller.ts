@@ -7,6 +7,7 @@ import { DashboardStatisticsService } from './dashboard-statistics.service';
 
 // ** DTOs
 import { OverviewQueryDto } from './dto/overview-query.dto';
+import { RegistrationsQueryDto } from './dto/registrations-query.dto';
 
 // ** Guards
 import { RolesGuard } from '../guards/roles.guard';
@@ -31,9 +32,27 @@ export class DashboardStatisticsController {
   @Get('overview')
   @Roles(RoleType.ADMIN)
   @ResponseMessage(DASHBOARD_STATISTICS_MESSAGES.GET_OVERVIEW_SUCCESS)
-  @ApiOperation({ summary: 'Lấy số liệu tổng quan và tăng trưởng người dùng đăng ký mới' })
+  @ApiOperation({
+    summary: 'Lấy số liệu tổng quan và tăng trưởng người dùng đăng ký mới',
+  })
   async getOverview(@Query() query: OverviewQueryDto) {
     const data = await this.statsService.getOverview(query);
+    return {
+      data,
+      meta: {
+        generated_at: new Date().toISOString(),
+      },
+    };
+  }
+
+  @Get('registrations')
+  @Roles(RoleType.ADMIN)
+  @ResponseMessage(DASHBOARD_STATISTICS_MESSAGES.GET_REGISTRATIONS_SUCCESS)
+  @ApiOperation({
+    summary: 'Lấy số liệu đăng ký người dùng theo ngày, tháng, năm',
+  })
+  async getRegistrations(@Query() query: RegistrationsQueryDto) {
+    const data = await this.statsService.getRegistrations(query);
     return {
       data,
       meta: {
