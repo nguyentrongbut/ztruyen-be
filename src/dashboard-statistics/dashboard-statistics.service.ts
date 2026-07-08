@@ -42,6 +42,17 @@ export interface IDemographicsResult {
   count: number;
 }
 
+export interface ITopGenreResult {
+  genre: string;
+  count: number;
+}
+
+export interface ITopComicResult {
+  comic_name: string;
+  comic_slug: string;
+  count: number;
+}
+
 @Injectable()
 export class DashboardStatisticsService {
   constructor(
@@ -212,18 +223,13 @@ export class DashboardStatisticsService {
           calculatedAge: {
             $cond: {
               if: {
-                $and: [
-                  { $ne: ['$age', null] },
-                  { $isNumber: '$age' },
-                ],
+                $and: [{ $ne: ['$age', null] }, { $isNumber: '$age' }],
               },
               then: '$age',
               else: {
                 $cond: {
                   if: {
-                    $and: [
-                      { $ne: ['$birthday', null] },
-                    ],
+                    $and: [{ $ne: ['$birthday', null] }],
                   },
                   then: {
                     $subtract: [
@@ -297,5 +303,70 @@ export class DashboardStatisticsService {
       group,
       count: dbMap[group] ?? 0,
     }));
+  }
+
+  async getTopGenres(limit: number = 10): Promise<ITopGenreResult[]> {
+    const clampedLimit = Math.min(limit, 50);
+    interface IGenreAggregationResult {
+      _id: string;
+      count: number;
+    }
+    const dbResults =
+      await this.favoriteModel.aggregate<IGenreAggregationResult>([
+        {
+          $lookup: {
+            from: 'comics',
+            localField: 'comic_slug',
+            foreignField: 'slug',
+            as: 'comic',
+          },
+        },
+        { $unwind: '$comic' },
+        { $unwind: '$comic.genres' },
+        {
+          $group: {
+            _id: '$comic.genres',
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { count: -1 } },
+        { $limit: clampedLimit },
+      ]);
+    return dbResults.map((row) => ({
+      genre: row._id,
+      count: row.count,
+    }));
+  }
+
+  async getTopComics(limit: number = 10): Promise<ITopComicResult[]> {
+    const clampedLimit = Math.min(limit, 50);
+    const dbResults = await this.favoriteModel.aggregate<ITopComicResult>([
+      {
+        $lookup: {
+          from: 'comics',
+          localField: 'comic_slug',
+          foreignField: 'slug',
+          as: 'comic',
+        },
+      },
+      { $unwind: '$comic' },
+      {
+        $group: {
+          _id: { slug: '$comic.slug', name: '$comic.name' },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { count: -1 } },
+      { $limit: clampedLimit },
+      {
+        $project: {
+          _id: 0,
+          comic_slug: '$_id.slug',
+          comic_name: '$_id.name',
+          count: 1,
+        },
+      },
+    ]);
+    return dbResults;
   }
 }

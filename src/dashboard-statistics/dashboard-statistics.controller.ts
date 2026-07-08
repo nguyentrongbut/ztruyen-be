@@ -8,6 +8,7 @@ import { DashboardStatisticsService } from './dashboard-statistics.service';
 // ** DTOs
 import { OverviewQueryDto } from './dto/overview-query.dto';
 import { RegistrationsQueryDto } from './dto/registrations-query.dto';
+import { TopLimitQueryDto } from './dto/top-limit-query.dto';
 
 // ** Guards
 import { RolesGuard } from '../guards/roles.guard';
@@ -69,6 +70,38 @@ export class DashboardStatisticsController {
   })
   async getDemographics() {
     const data = await this.statsService.getDemographics();
+    return {
+      data,
+      meta: {
+        generated_at: new Date().toISOString(),
+      },
+    };
+  }
+
+  @Get('top-genres')
+  @Roles(RoleType.ADMIN)
+  @ResponseMessage(DASHBOARD_STATISTICS_MESSAGES.GET_TOP_GENRES_SUCCESS)
+  @ApiOperation({
+    summary: 'Lấy danh sách thể loại yêu thích hàng đầu',
+  })
+  async getTopGenres(@Query() query: TopLimitQueryDto) {
+    const data = await this.statsService.getTopGenres(query.limit);
+    return {
+      data,
+      meta: {
+        generated_at: new Date().toISOString(),
+      },
+    };
+  }
+
+  @Get('top-comics')
+  @Roles(RoleType.ADMIN)
+  @ResponseMessage(DASHBOARD_STATISTICS_MESSAGES.GET_TOP_COMICS_SUCCESS)
+  @ApiOperation({
+    summary: 'Lấy danh sách truyện yêu thích hàng đầu',
+  })
+  async getTopComics(@Query() query: TopLimitQueryDto) {
+    const data = await this.statsService.getTopComics(query.limit);
     return {
       data,
       meta: {
