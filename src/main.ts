@@ -98,6 +98,7 @@ API truyện tranh, Data truyện tranh miễn phí.`;
     .addTag('announcement', 'Popup thông báo')
     .addTag('comic', 'BXH truyện')
     .addTag('guide', 'hướng dẫn')
+    .addTag('dashboard-statistics', 'Thống kê dashboard cho admin')
 
     .build();
 
