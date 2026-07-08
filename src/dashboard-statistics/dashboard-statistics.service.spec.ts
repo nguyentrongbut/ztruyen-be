@@ -17,6 +17,7 @@ import { GroupType } from './dto/registrations-query.dto';
 const mockUserCountDocuments = jest.fn();
 const mockFavoriteCountDocuments = jest.fn();
 const mockUserAggregate = jest.fn();
+const mockFavoriteAggregate = jest.fn();
 
 const mockUserModel = {
   countDocuments: mockUserCountDocuments,
@@ -25,6 +26,7 @@ const mockUserModel = {
 
 const mockFavoriteModel = {
   countDocuments: mockFavoriteCountDocuments,
+  aggregate: mockFavoriteAggregate,
 };
 
 describe('DashboardStatisticsService', () => {
@@ -368,5 +370,65 @@ describe('DashboardStatisticsService', () => {
         { group: 'Unknown', count: 0 },
       ]);
     });
+  });
+
+  describe('getTopGenres', () => {
+    it('should aggregate favorites and return top genres list with default limit 10', async () => {
+      mockFavoriteAggregate.mockResolvedValue([
+        { _id: 'Action', count: 10 },
+        { _id: 'Comedy', count: 5 },
+      ]);
+
+      const result = await service.getTopGenres();
+
+      expect(result).toEqual([
+        { genre: 'Action', count: 10 },
+        { genre: 'Comedy', count: 5 },
+      ]);
+      expect(mockFavoriteAggregate).toHaveBeenCalledWith(
+        expect.arrayContaining([{ $limit: 10 }]),
+      );
+    });
+
+    it('should clamp limit to 50 if limit is greater than 50', async () => {
+      mockFavoriteAggregate.mockResolvedValue([]);
+
+      await service.getTopGenres(100);
+
+      expect(mockFavoriteAggregate).toHaveBeenCalledWith(
+        expect.arrayContaining([{ $limit: 50 }]),
+      );
+    });
+
+  });
+
+  describe('getTopComics', () => {
+    it('should aggregate favorites and return top comics list with default limit 10', async () => {
+      mockFavoriteAggregate.mockResolvedValue([
+        { comic_slug: 'comic-a', comic_name: 'Comic A', count: 10 },
+        { comic_slug: 'comic-b', comic_name: 'Comic B', count: 5 },
+      ]);
+
+      const result = await service.getTopComics();
+
+      expect(result).toEqual([
+        { comic_slug: 'comic-a', comic_name: 'Comic A', count: 10 },
+        { comic_slug: 'comic-b', comic_name: 'Comic B', count: 5 },
+      ]);
+      expect(mockFavoriteAggregate).toHaveBeenCalledWith(
+        expect.arrayContaining([{ $limit: 10 }]),
+      );
+    });
+
+    it('should clamp limit to 50 if limit is greater than 50', async () => {
+      mockFavoriteAggregate.mockResolvedValue([]);
+
+      await service.getTopComics(100);
+
+      expect(mockFavoriteAggregate).toHaveBeenCalledWith(
+        expect.arrayContaining([{ $limit: 50 }]),
+      );
+    });
+
   });
 });
