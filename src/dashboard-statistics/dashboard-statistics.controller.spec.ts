@@ -24,9 +24,19 @@ const mockRegistrationsData = [
   { date: '2026-06-10', count: 2 },
 ];
 
+const mockDemographicsData = [
+  { group: '<18', count: 1 },
+  { group: '18-25', count: 2 },
+  { group: '26-35', count: 3 },
+  { group: '36-45', count: 4 },
+  { group: '>45', count: 5 },
+  { group: 'Unknown', count: 6 },
+];
+
 const mockStatsService = {
   getOverview: jest.fn().mockResolvedValue(mockOverviewData),
   getRegistrations: jest.fn().mockResolvedValue(mockRegistrationsData),
+  getDemographics: jest.fn().mockResolvedValue(mockDemographicsData),
 };
 
 describe('DashboardStatisticsController', () => {
@@ -86,6 +96,20 @@ describe('DashboardStatisticsController', () => {
         },
       });
       expect(mockStatsService.getRegistrations).toHaveBeenCalledWith(query);
+    });
+  });
+
+  describe('getDemographics', () => {
+    it('should return user age demographics distribution inside standard response envelope', async () => {
+      const response = await controller.getDemographics();
+
+      expect(response).toEqual({
+        data: mockDemographicsData,
+        meta: {
+          generated_at: expect.any(String),
+        },
+      });
+      expect(mockStatsService.getDemographics).toHaveBeenCalled();
     });
   });
 });

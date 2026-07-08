@@ -37,6 +37,11 @@ export interface IRegistrationsResult {
   count: number;
 }
 
+export interface IDemographicsResult {
+  group: string;
+  count: number;
+}
+
 @Injectable()
 export class DashboardStatisticsService {
   constructor(
@@ -188,5 +193,109 @@ export class DashboardStatisticsService {
     }
 
     return result;
+  }
+
+  async getDemographics(): Promise<IDemographicsResult[]> {
+    const currentYear = dayjs().utc().year();
+
+    interface IAggregationResult {
+      _id: string;
+      count: number;
+    }
+
+    const dbResults = await this.userModel.aggregate<IAggregationResult>([
+      {
+        $match: { isDeleted: { $ne: true } },
+      },
+      {
+        $project: {
+          calculatedAge: {
+            $cond: {
+              if: {
+                $and: [
+                  { $ne: ['$age', null] },
+                  { $isNumber: '$age' },
+                ],
+              },
+              then: '$age',
+              else: {
+                $cond: {
+                  if: {
+                    $and: [
+                      { $ne: ['$birthday', null] },
+                    ],
+                  },
+                  then: {
+                    $subtract: [
+                      currentYear,
+                      { $year: { date: '$birthday', timezone: 'UTC' } },
+                    ],
+                  },
+                  else: null,
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          group: {
+            $switch: {
+              branches: [
+                { case: { $eq: ['$calculatedAge', null] }, then: 'Unknown' },
+                { case: { $lt: ['$calculatedAge', 0] }, then: 'Unknown' },
+                { case: { $lt: ['$calculatedAge', 18] }, then: '<18' },
+                {
+                  case: {
+                    $and: [
+                      { $gte: ['$calculatedAge', 18] },
+                      { $lte: ['$calculatedAge', 25] },
+                    ],
+                  },
+                  then: '18-25',
+                },
+                {
+                  case: {
+                    $and: [
+                      { $gte: ['$calculatedAge', 26] },
+                      { $lte: ['$calculatedAge', 35] },
+                    ],
+                  },
+                  then: '26-35',
+                },
+                {
+                  case: {
+                    $and: [
+                      { $gte: ['$calculatedAge', 36] },
+                      { $lte: ['$calculatedAge', 45] },
+                    ],
+                  },
+                  then: '36-45',
+                },
+              ],
+              default: '>45',
+            },
+          },
+        },
+      },
+      {
+        $group: {
+          _id: '$group',
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const groupsOrder = ['<18', '18-25', '26-35', '36-45', '>45', 'Unknown'];
+    const dbMap = dbResults.reduce((acc, row) => {
+      acc[row._id] = row.count;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return groupsOrder.map((group) => ({
+      group,
+      count: dbMap[group] ?? 0,
+    }));
   }
 }
