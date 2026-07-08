@@ -18,7 +18,7 @@ import { OverviewQueryDto } from './dto/overview-query.dto';
 
 dayjs.extend(utc);
 
-interface IOverviewResult {
+export interface IOverviewResult {
   total_users: number;
   new_users_current_period: number;
   new_users_growth_percent: number | null;
