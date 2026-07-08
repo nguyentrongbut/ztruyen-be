@@ -27,11 +27,11 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { FirebaseModule } from './firebase/firebase.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { ComicsModule } from './comics/comics.module';
+import { DashboardStatisticsModule } from './dashboard-statistics/dashboard-statistics.module';
 
 @Module({
   imports: [
     MongooseModule.forRootAsync({
-      imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         uri: configService.get<string>('MONGO_URL'),
         connectionFactory: (connection) => {
@@ -40,6 +40,7 @@ import { ComicsModule } from './comics/comics.module';
         },
       }),
       inject: [ConfigService],
+      imports: [ConfigModule],
     }),
     ConfigModule.forRoot({
       isGlobal: true,
@@ -57,7 +58,8 @@ import { ComicsModule } from './comics/comics.module';
     NotificationsModule,
     FirebaseModule,
     AnnouncementsModule,
-    ComicsModule
+    ComicsModule,
+    DashboardStatisticsModule
   ],
   controllers: [AppController],
   providers: [AppService],
