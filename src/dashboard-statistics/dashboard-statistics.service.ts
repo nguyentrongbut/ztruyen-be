@@ -23,6 +23,9 @@ import {
   GroupType,
 } from './dto/registrations-query.dto';
 
+// ** Enums
+import { RoleType } from '../configs/enums/user.enum';
+
 dayjs.extend(utc);
 
 export interface IOverviewResult {
@@ -88,14 +91,37 @@ export class DashboardStatisticsService {
 
     const [totalUsers, totalFavorites, newUsersCurrent, newUsersPrev] =
       await Promise.all([
-        this.userModel.countDocuments({ isDeleted: { $ne: true } }),
-        this.favoriteModel.countDocuments({ isDeleted: { $ne: true } }),
         this.userModel.countDocuments({
           isDeleted: { $ne: true },
+          role: { $ne: RoleType.ADMIN },
+        }),
+        this.favoriteModel.aggregate([
+          { $match: { isDeleted: { $ne: true } } },
+          {
+            $lookup: {
+              from: 'users',
+              localField: 'userId',
+              foreignField: '_id',
+              as: 'user',
+            },
+          },
+          { $unwind: '$user' },
+          {
+            $match: {
+              'user.isDeleted': { $ne: true },
+              'user.role': { $ne: RoleType.ADMIN },
+            },
+          },
+          { $count: 'count' },
+        ]).then((res) => res[0]?.count || 0),
+        this.userModel.countDocuments({
+          isDeleted: { $ne: true },
+          role: { $ne: RoleType.ADMIN },
           createdAt: { $gte: fromDate, $lt: toDate },
         }),
         this.userModel.countDocuments({
           isDeleted: { $ne: true },
+          role: { $ne: RoleType.ADMIN },
           createdAt: { $gte: fromPrevDate, $lt: toPrevDate },
         }),
       ]);
@@ -150,6 +176,7 @@ export class DashboardStatisticsService {
       {
         $match: {
           isDeleted: { $ne: true },
+          role: { $ne: RoleType.ADMIN },
           createdAt: { $gte: fromDate, $lt: toDate },
         },
       },
@@ -216,7 +243,10 @@ export class DashboardStatisticsService {
 
     const dbResults = await this.userModel.aggregate<IAggregationResult>([
       {
-        $match: { isDeleted: { $ne: true } },
+        $match: {
+          isDeleted: { $ne: true },
+          role: { $ne: RoleType.ADMIN },
+        },
       },
       {
         $project: {
@@ -314,6 +344,26 @@ export class DashboardStatisticsService {
     const dbResults =
       await this.favoriteModel.aggregate<IGenreAggregationResult>([
         {
+          $match: {
+            isDeleted: { $ne: true },
+          },
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'user',
+          },
+        },
+        { $unwind: '$user' },
+        {
+          $match: {
+            'user.isDeleted': { $ne: true },
+            'user.role': { $ne: RoleType.ADMIN },
+          },
+        },
+        {
           $lookup: {
             from: 'comics',
             localField: 'comic_slug',
@@ -322,6 +372,11 @@ export class DashboardStatisticsService {
           },
         },
         { $unwind: '$comic' },
+        {
+          $match: {
+            'comic.isDeleted': { $ne: true },
+          },
+        },
         { $unwind: '$comic.genres' },
         {
           $group: {
@@ -342,6 +397,26 @@ export class DashboardStatisticsService {
     const clampedLimit = Math.min(limit, 50);
     const dbResults = await this.favoriteModel.aggregate<ITopComicResult>([
       {
+        $match: {
+          isDeleted: { $ne: true },
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      { $unwind: '$user' },
+      {
+        $match: {
+          'user.isDeleted': { $ne: true },
+          'user.role': { $ne: RoleType.ADMIN },
+        },
+      },
+      {
         $lookup: {
           from: 'comics',
           localField: 'comic_slug',
@@ -350,6 +425,11 @@ export class DashboardStatisticsService {
         },
       },
       { $unwind: '$comic' },
+      {
+        $match: {
+          'comic.isDeleted': { $ne: true },
+        },
+      },
       {
         $group: {
           _id: { slug: '$comic.slug', name: '$comic.name' },
