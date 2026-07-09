@@ -1,6 +1,6 @@
 # ztruyen-be - Project Overview
 
-**Date:** 2026-07-05T15:06:00+07:00
+**Date:** 2026-07-09T10:20:00+07:00
 **Type:** Backend (API Server)
 **Architecture:** NestJS MVC / Module-based Dependency Injection
 
@@ -48,6 +48,7 @@
 5. **Referer-Shielded Image Loader:** Restricts static image loads to requests originating from allowed CORS sites (`FE_CLIENT_URL`, `FE_ADMIN_URL`, `BACKEND_URL`).
 6. **Push Alerts System:** Dispatches notification signals using Firebase Admin SDK to user client devices on comments activity.
 7. **TTL-indexed Alerts Log:** Clears user notification records automatically after 30 days via a MongoDB expire index.
+8. **Admin Dashboard Telemetry:** Exposes telemetry endpoints retrieving registration growth overview, registrations counts graphs grouped by day/month/year, age demographics distribution, and top favorited genres/comics.
 
 ---
 
@@ -86,6 +87,7 @@ The main codebase is contained under the `src/` directory. All subfolders repres
 - `src/users/` — User management, profile configs, and Excel scripts.
 - `src/comics/` — Comic listings, ratings, and bulk data loaders.
 - `src/comments/` — Comment, like, and flag schemas and controllers.
+- `src/dashboard-statistics/` — Telemetry statistics module for administrator dashboards.
 - `src/notifications/` — Log of notice events with TTL expiry.
 - `src/upload-telegram/` — Image uploads pipeline using Telegram bots.
 - `src/email/` — Reset passwords emailing.

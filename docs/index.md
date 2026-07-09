@@ -3,11 +3,11 @@
 **Type:** Monolith
 **Primary Language:** TypeScript / JavaScript (Node.js)
 **Architecture:** NestJS Module-based Dependency Injection
-**Last Updated:** 2026-07-05T15:07:00+07:00
+**Last Updated:** 2026-07-09T10:20:00+07:00
 
 ## Project Overview
 
-**Ztruyện Backend** serves as the API server for the online comic reading portal **Ztruyện**. It handles account creation, local credentials and social logins authentication (Google, Facebook, Discord), user profile customization, avatar frames decorating, comment sections, notification logs, image resolution with referer restriction, media uploading buffers via Telegram API, and Firebase-based push notifications.
+**Ztruyện Backend** serves as the API server for the online comic reading portal **Ztruyện**. It handles account creation, local credentials and social logins authentication (Google, Facebook, Discord), user profile customization, avatar frames decorating, comment sections, notification logs, image resolution with referer restriction, media uploading buffers via Telegram API, Firebase-based push notifications, and admin dashboard statistics telemetry.
 
 ---
 

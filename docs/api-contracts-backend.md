@@ -211,3 +211,18 @@ Static image resolving and file uploading.
 | `GET` | `/image/:slug` | Public (Referer) | Returns the image asset stream. Access restricted via Referer validation headers (`FE_CLIENT_URL`, `FE_ADMIN_URL`, `BACKEND_URL`). |
 | `POST` | `/upload` | User | Upload a single image (limits file size to 2MB). Uploads file via Telegram Bot channel. |
 | `POST` | `/upload/upload-multiple` | User | Upload up to 10 images simultaneously (limits total size to 50MB). |
+
+---
+
+### 11. Dashboard Statistics (`/api/v1/dashboard-statistics`)
+
+Endpoints for retrieving admin dashboard statistics and analytics telemetry. Protected by RolesGuard, accessible to administrators only.
+
+| Method | Path | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/dashboard-statistics/overview` | Admin | Get registrations overview metrics and users/favorites counts growth in comparison with the previous period. Supports optional `from` and `to` date filters. |
+| `GET` | `/dashboard-statistics/registrations` | Admin | Get user registration counts grouped by `day`, `month`, or `year`. Requires `type` parameter and supports optional `from` and `to` date filters. |
+| `GET` | `/dashboard-statistics/demographics` | Admin | Get user registrations counts distributed across age ranges demographics. |
+| `GET` | `/dashboard-statistics/top-genres` | Admin | List top favorited genres. Supports optional `limit` parameter (default 10, max 50). |
+| `GET` | `/dashboard-statistics/top-comics` | Admin | List top favorited comics. Supports optional `limit` parameter (default 10, max 50). |
+

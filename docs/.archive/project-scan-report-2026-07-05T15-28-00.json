@@ -1,85 +1,85 @@
 {
   "workflow_version": "1.2.0",
   "timestamps": {
-    "started": "2026-07-09T10:20:00+07:00",
-    "last_updated": "2026-07-09T10:24:15+07:00",
-    "completed": "2026-07-09T10:24:15+07:00"
+    "started": "2026-07-05T14:58:00+07:00",
+    "last_updated": "2026-07-05T15:28:00+07:00",
+    "completed": "2026-07-05T15:28:00+07:00"
   },
-  "mode": "full_rescan",
-  "scan_level": "quick",
+  "mode": "initial_scan",
+  "scan_level": "exhaustive",
   "project_root": "c:/butnt/nextjs/ztruyen-be",
   "project_knowledge": "c:/butnt/nextjs/ztruyen-be/docs",
   "completed_steps": [
     {
       "step": "step_1",
       "status": "completed",
-      "timestamp": "2026-07-09T10:21:40+07:00",
+      "timestamp": "2026-07-05T14:59:15+07:00",
       "summary": "Classified as monolith with 1 part (backend)"
     },
     {
       "step": "step_2",
       "status": "completed",
-      "timestamp": "2026-07-09T10:22:10+07:00",
-      "summary": "Found 10 existing docs"
+      "timestamp": "2026-07-05T14:59:45+07:00",
+      "summary": "Found 2 existing docs"
     },
     {
       "step": "step_3",
       "status": "completed",
-      "timestamp": "2026-07-09T10:22:20+07:00",
+      "timestamp": "2026-07-05T15:00:00+07:00",
       "summary": "Tech stack: NestJS (v9.4.0) on Node.js/TypeScript, MongoDB/Mongoose (v7.1.0)"
     },
     {
       "step": "step_4",
       "status": "completed",
-      "timestamp": "2026-07-09T10:23:00+07:00",
-      "summary": "Conditional analysis complete, 1 file updated (api-contracts-backend.md)"
+      "timestamp": "2026-07-05T15:02:00+07:00",
+      "summary": "Conditional analysis complete, 2 files written"
     },
     {
       "step": "step_5",
       "status": "completed",
-      "timestamp": "2026-07-09T10:23:10+07:00",
+      "timestamp": "2026-07-05T15:03:00+07:00",
       "summary": "Source tree documented"
     },
     {
       "step": "step_6",
       "status": "completed",
-      "timestamp": "2026-07-09T10:23:15+07:00",
-      "summary": "Dev/deployment guides verified (no updates needed)"
+      "timestamp": "2026-07-05T15:04:00+07:00",
+      "summary": "Dev/deployment guides written"
     },
     {
       "step": "step_7",
       "status": "completed",
-      "timestamp": "2026-07-09T10:23:20+07:00",
+      "timestamp": "2026-07-05T15:05:00+07:00",
       "summary": "Skipped (monolith project)"
     },
     {
       "step": "step_8",
       "status": "completed",
-      "timestamp": "2026-07-09T10:23:25+07:00",
-      "summary": "Architecture docs updated (architecture.md)"
+      "timestamp": "2026-07-05T15:06:00+07:00",
+      "summary": "Architecture docs written for 1 part"
     },
     {
       "step": "step_9",
       "status": "completed",
-      "timestamp": "2026-07-09T10:23:45+07:00",
-      "summary": "All supporting docs updated (project-overview.md)"
+      "timestamp": "2026-07-05T15:07:00+07:00",
+      "summary": "All supporting docs written"
     },
     {
       "step": "step_10",
       "status": "completed",
-      "timestamp": "2026-07-09T10:23:50+07:00",
-      "summary": "Master index updated (index.md)"
+      "timestamp": "2026-07-05T15:08:00+07:00",
+      "summary": "Master index generated"
     },
     {
       "step": "step_11",
       "status": "completed",
-      "timestamp": "2026-07-09T10:24:00+07:00",
+      "timestamp": "2026-07-05T15:28:00+07:00",
       "summary": "Validation and review complete"
     },
     {
       "step": "step_12",
       "status": "completed",
-      "timestamp": "2026-07-09T10:24:15+07:00",
+      "timestamp": "2026-07-05T15:28:00+07:00",
       "summary": "Workflow complete"
     }
   ],
@@ -103,46 +103,6 @@
         "path": ".github/workflows/main_ztruyen-be.yml",
         "type": "ci_cd_pipeline",
         "description": "CI/CD deployment workflow"
-      },
-      {
-        "path": "docs/index.md",
-        "type": "index",
-        "description": "Project documentation index"
-      },
-      {
-        "path": "docs/api-contracts-backend.md",
-        "type": "api_contracts",
-        "description": "Complete REST endpoints catalog"
-      },
-      {
-        "path": "docs/architecture.md",
-        "type": "architecture",
-        "description": "High-level system structure and patterns"
-      },
-      {
-        "path": "docs/data-models-backend.md",
-        "type": "data_models",
-        "description": "Mongoose schemas fields structures and indexes"
-      },
-      {
-        "path": "docs/deployment-guide.md",
-        "type": "deployment_guide",
-        "description": "CI/CD pipeline actions setup"
-      },
-      {
-        "path": "docs/development-guide.md",
-        "type": "development_guide",
-        "description": "Developer installation and running guide"
-      },
-      {
-        "path": "docs/project-overview.md",
-        "type": "project_overview",
-        "description": "Executive summary and technology summary"
-      },
-      {
-        "path": "docs/source-tree-analysis.md",
-        "type": "source_tree_analysis",
-        "description": "Annotated codebase directory structure"
       }
     ],
     "technology_stack": {
@@ -160,7 +120,7 @@
       "architecture_pattern": "NestJS Module-based Dependency Injection (Controller-Service-Model)"
     },
     "scanned_outputs": {
-      "apis": "11 endpoint categories documented in api-contracts-backend.md",
+      "apis": "10 endpoint categories documented in api-contracts-backend.md",
       "data": "12 collections documented in data-models-backend.md",
       "tree": "Source tree structure documented in source-tree-analysis.md",
       "dev_setup": "Development guide documented in development-guide.md",

@@ -42,6 +42,7 @@ graph TD
     App --> Comments[Comments Module]
     App --> Emojis[Emojis Module]
     App --> Notify[Notifications Module]
+    App --> Stats[Dashboard Statistics Module]
     
     subgraph "Feature Module Architecture (e.g. Comics Module)"
         Comics --> Controller[comics.controller.ts]
