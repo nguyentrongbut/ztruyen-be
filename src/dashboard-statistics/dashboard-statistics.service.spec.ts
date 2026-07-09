@@ -13,6 +13,9 @@ import { Favorite } from '../favorites/schemas/favorite.schema';
 // ** DTOs
 import { GroupType } from './dto/registrations-query.dto';
 
+// ** Enums
+import { RoleType } from '../configs/enums/user.enum';
+
 // ** Mocks
 const mockUserCountDocuments = jest.fn();
 const mockFavoriteCountDocuments = jest.fn();
@@ -64,7 +67,7 @@ describe('DashboardStatisticsService', () => {
         .mockResolvedValueOnce(15) // newUsersCurrent
         .mockResolvedValueOnce(10); // newUsersPrev
 
-      mockFavoriteCountDocuments.mockResolvedValueOnce(200); // totalFavorites
+      mockFavoriteAggregate.mockResolvedValueOnce([{ count: 200 }]); // totalFavorites
 
       const result = await service.getOverview({
         from: '2026-06-08T00:00:00.000Z',
@@ -78,7 +81,14 @@ describe('DashboardStatisticsService', () => {
         total_favorites: 200,
       });
       expect(mockUserCountDocuments).toHaveBeenCalledTimes(3);
-      expect(mockFavoriteCountDocuments).toHaveBeenCalledTimes(1);
+      expect(mockFavoriteAggregate).toHaveBeenCalledTimes(1);
+
+      // Verify role filtering in user count queries
+      const totalUsersCall = mockUserCountDocuments.mock.calls[0][0];
+      expect(totalUsersCall).toEqual({
+        isDeleted: { $ne: true },
+        role: { $ne: RoleType.ADMIN },
+      });
     });
 
     it('should return growth percent as null when previous period count is zero', async () => {
@@ -87,7 +97,7 @@ describe('DashboardStatisticsService', () => {
         .mockResolvedValueOnce(15) // newUsersCurrent
         .mockResolvedValueOnce(0); // newUsersPrev
 
-      mockFavoriteCountDocuments.mockResolvedValueOnce(200); // totalFavorites
+      mockFavoriteAggregate.mockResolvedValueOnce([{ count: 200 }]); // totalFavorites
 
       const result = await service.getOverview({
         from: '2026-06-08T00:00:00.000Z',
@@ -117,7 +127,7 @@ describe('DashboardStatisticsService', () => {
 
     it('should use half-open interval [$gte from, $lt to] for current period query', async () => {
       mockUserCountDocuments.mockResolvedValue(0);
-      mockFavoriteCountDocuments.mockResolvedValue(0);
+      mockFavoriteAggregate.mockResolvedValue([{ count: 0 }]);
 
       await service.getOverview({
         from: '2026-06-08T00:00:00.000Z',
@@ -129,6 +139,7 @@ describe('DashboardStatisticsService', () => {
       expect(currentPeriodCall[0].createdAt).toHaveProperty('$gte');
       expect(currentPeriodCall[0].createdAt).toHaveProperty('$lt');
       expect(currentPeriodCall[0].createdAt).not.toHaveProperty('$lte');
+      expect(currentPeriodCall[0].role).toEqual({ $ne: RoleType.ADMIN });
     });
   });
 
@@ -155,6 +166,7 @@ describe('DashboardStatisticsService', () => {
         {
           $match: {
             isDeleted: { $ne: true },
+            role: { $ne: RoleType.ADMIN },
             createdAt: {
               $gte: new Date('2026-06-08T00:00:00.000Z'),
               $lt: new Date('2026-06-11T00:00:00.000Z'),
@@ -292,7 +304,12 @@ describe('DashboardStatisticsService', () => {
       ]);
 
       const pipeline = mockUserAggregate.mock.calls[0][0];
-      expect(pipeline[0]).toEqual({ $match: { isDeleted: { $ne: true } } });
+      expect(pipeline[0]).toEqual({
+        $match: {
+          isDeleted: { $ne: true },
+          role: { $ne: RoleType.ADMIN },
+        },
+      });
 
       expect(pipeline[3]).toEqual({
         $group: {
@@ -388,6 +405,22 @@ describe('DashboardStatisticsService', () => {
       expect(mockFavoriteAggregate).toHaveBeenCalledWith(
         expect.arrayContaining([{ $limit: 10 }]),
       );
+
+      const pipeline = mockFavoriteAggregate.mock.calls[0][0];
+      expect(pipeline).toContainEqual({
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'user',
+        },
+      });
+      expect(pipeline).toContainEqual({
+        $match: {
+          'user.isDeleted': { $ne: true },
+          'user.role': { $ne: RoleType.ADMIN },
+        },
+      });
     });
 
     it('should clamp limit to 50 if limit is greater than 50', async () => {
@@ -418,6 +451,22 @@ describe('DashboardStatisticsService', () => {
       expect(mockFavoriteAggregate).toHaveBeenCalledWith(
         expect.arrayContaining([{ $limit: 10 }]),
       );
+
+      const pipeline = mockFavoriteAggregate.mock.calls[0][0];
+      expect(pipeline).toContainEqual({
+        $lookup: {
+          from: 'users',
+          localField: 'userId',
+          foreignField: '_id',
+          as: 'user',
+        },
+      });
+      expect(pipeline).toContainEqual({
+        $match: {
+          'user.isDeleted': { $ne: true },
+          'user.role': { $ne: RoleType.ADMIN },
+        },
+      });
     });
 
     it('should clamp limit to 50 if limit is greater than 50', async () => {
