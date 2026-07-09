@@ -24,6 +24,7 @@ ztruyen-be/
 │   ├── comments/            # Commenting engine, nested replies, and moderation module
 │   ├── configs/             # Application-wide constants, enums, and messages
 │   ├── core/                # Global interceptors, sanitizers, and pipes
+│   ├── dashboard-statistics/# Admin dashboard statistics telemetry module
 │   ├── decorator/           # Custom decorators (e.g. @Public, @User, @Roles)
 │   ├── email/               # Resend mail utility and Pug templates
 │   ├── emoji-categories/    # Category groupings for emojis
@@ -86,6 +87,13 @@ The commenting platform. Supports replies, nesting, reports, likes, and moderato
 
 - **Purpose:** Handles user interaction comment flows, moderation reports, and likes.
 - **Contains:** Comment, comment-like, and comment-report schemas; moderation services.
+
+### `src/dashboard-statistics/`
+
+Admin dashboard telemetry module for retrieving metrics, registration stats, age demographics, and top favorites.
+
+- **Purpose:** Business analytics and administrator dashboards data provider.
+- **Contains:** Dashboard statistics controller, service, test suites, and query transfer objects (DTOs).
 
 ### `src/notifications/`
 
